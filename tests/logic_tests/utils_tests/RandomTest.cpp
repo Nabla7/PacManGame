@@ -1,5 +1,5 @@
 // tests/utils_tests/RandomTest.cpp
-#include "../Logic/utils/Random.hpp"
+#include "utils/Random.hpp"
 #include <iostream>
 #include <cassert>
 

@@ -1,4 +1,6 @@
-// PacmanGameEntityFactory.hpp
+// ConcreteEntityFactory.hpp
+#ifndef CONCRETE_ENTITY_FACTORY_HPP
+#define CONCRETE_ENTITY_FACTORY_HPP
 
 #include "EntityFactory.hpp"
 #include "../models/Entity.hpp"
@@ -29,3 +31,5 @@ public:
 };
 
 } // namespace Logic
+
+#endif // CONCRETE_ENTITY_FACTORY_HPP

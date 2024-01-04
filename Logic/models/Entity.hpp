@@ -24,8 +24,10 @@ public:
 };
 
 class Coin : public Entity {
-    // Coin-specific attributes
     int value; // The value of the coin when collected
+    public:
+        void setValue(int v) { value = v; }
+        int getValue() const { return value; }
 };
 
 class Fruit : public Entity {
@@ -44,9 +46,10 @@ class Wall : public Entity {
 };
 
 class Pacman : public Entity {
-    // Pacman-specific attributes
     int lives; // The number of lives left
-    int score; // The current score
+    public:
+        void setLives(int l) { lives = l; }
+        int getLives() const { return lives; }
 };
 
 } // namespace Logic

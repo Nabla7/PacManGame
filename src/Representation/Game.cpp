@@ -6,9 +6,10 @@
 namespace Representation {
 
 Game::Game()
-    : window_(sf::VideoMode(800, 600), "Pacman Game"),
-      inputHandler_(window_) {
-    // Initialize the world here
+        : window_(sf::VideoMode(800, 600), "Pacman Game"),
+          inputHandler_(window_),
+          world_(std::make_shared<Logic::PacmanGameEntityFactory>()) { // Initialize world with the factory
+    // Additional initialization if needed
 }
 
 Game::~Game() {

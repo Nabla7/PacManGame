@@ -5,7 +5,7 @@
 
 namespace Logic {
 
-World::World() {
+World::World(std::shared_ptr<EntityFactory> factory) : entityFactory(std::move(factory)) {
     // Hardcoded map represented by digits
     int initialMap[height][width] = {
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -51,36 +51,34 @@ World::~World() {
     // Unique pointers in entities vector will automatically deallocate memory
 }
 
-void World::addEntity(EntityType type, int x, int y) {
-    // Ensure the coordinates are within the world bounds
-    if (x >= 0 && x < width && y >= 0 && y < height) {
-        // Depending on the EntityType, create the appropriate entity
-        switch (type) {
-            case EntityType::Coin:
-                entities.push_back(std::make_unique<Coin>());
-                break;
-            case EntityType::Fruit:
-                entities.push_back(std::make_unique<Fruit>());
-                break;
-            case EntityType::Ghost:
-                entities.push_back(std::make_unique<Ghost>());
-                break;
-            case EntityType::Wall:
-                entities.push_back(std::make_unique<Wall>());
-                break;
-            case EntityType::Pacman:
-                entities.push_back(std::make_unique<Pacman>());
-                break;
-            default:
-                break; // Do nothing for EntityType::Empty
+    void World::addEntity(EntityType type, int x, int y) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+            std::unique_ptr<Entity> entity;
+            switch (type) {
+                case EntityType::Coin:
+                    entity = entityFactory->createCoin();
+                    break;
+                case EntityType::Fruit:
+                    entity = entityFactory->createFruit();
+                    break;
+                case EntityType::Ghost:
+                    entity = entityFactory->createGhost();
+                    break;
+                case EntityType::Wall:
+                    entity = entityFactory->createWall();
+                    break;
+                case EntityType::Pacman:
+                    entity = entityFactory->createPacman();
+                    break;
+                default:
+                    return; // Do nothing for EntityType::Empty
+            }
+            entity->position.x = x;
+            entity->position.y = y;
+            entities.push_back(std::move(entity));
+            map[y][x] = type;
         }
-        // Set the entity's position
-        entities.back()->position.x = x;
-        entities.back()->position.y = y;
-        // Update the map
-        map[y][x] = type;
     }
-}
 
 void World::removeEntity(int x, int y) {
     if (x >= 0 && x < width && y >= 0 && y < height) {

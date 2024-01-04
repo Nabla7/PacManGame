@@ -1,5 +1,6 @@
 // EntityFactory.hpp
-
+#ifndef ENTITY_FACTORY_HPP
+#define ENTITY_FACTORY_HPP
 #include <memory> // Include for std::unique_ptr
 
 namespace Logic {
@@ -18,3 +19,4 @@ public:
 };
 
 } // namespace Logic
+#endif // ENTITY_FACTORY_HPP
