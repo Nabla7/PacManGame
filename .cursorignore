@@ -1,4 +1,37 @@
+# Ignore build folders
 build/
-libs/
+cmake-build-debug/
+
+# Ignore all log files
+*.log
+
+# Ignore CMake files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+
+# Ignore directories created by CLion and other JetBrains IDEs
 .idea/
-.vscode/
+*.iml
+
+# Ignore the binaries
+/bin/
+/lib/
+
+# Ignore other unnecessary files
+*.o
+*.a
+*.so
+*.dylib
+.DS_Store
+
+# Specific to your project, you might want to ignore the entire libs directory
+# if these libraries are supposed to be installed independently
+libs/
+
+# If there are any specific files you want to ignore, list them here
+# For example, ignore a specific configuration file
+# /path/to/specific/config.file
