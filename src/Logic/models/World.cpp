@@ -51,34 +51,34 @@ World::~World() {
     // Unique pointers in entities vector will automatically deallocate memory
 }
 
-    void World::addEntity(EntityType type, int x, int y) {
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            std::unique_ptr<Entity> entity;
-            switch (type) {
-                case EntityType::Coin:
-                    entity = entityFactory->createCoin();
-                    break;
-                case EntityType::Fruit:
-                    entity = entityFactory->createFruit();
-                    break;
-                case EntityType::Ghost:
-                    entity = entityFactory->createGhost();
-                    break;
-                case EntityType::Wall:
-                    entity = entityFactory->createWall();
-                    break;
-                case EntityType::Pacman:
-                    entity = entityFactory->createPacman();
-                    break;
-                default:
-                    return; // Do nothing for EntityType::Empty
-            }
-            entity->position.x = x;
-            entity->position.y = y;
-            entities.push_back(std::move(entity));
-            map[y][x] = type;
+void World::addEntity(EntityType type, int x, int y) {
+    if (x >= 0 && x < width && y >= 0 && y < height) {
+        std::unique_ptr<Entity> entity;
+        switch (type) {
+            case EntityType::Coin:
+                entity = entityFactory->createCoin();
+                break;
+            case EntityType::Fruit:
+                entity = entityFactory->createFruit();
+                break;
+            case EntityType::Ghost:
+                entity = entityFactory->createGhost();
+                break;
+            case EntityType::Wall:
+                entity = entityFactory->createWall();
+                break;
+            case EntityType::Pacman:
+                entity = entityFactory->createPacman();
+                break;
+            default:
+                return; // Do nothing for EntityType::Empty
         }
+        entity->position.x = (static_cast<float>(x) / static_cast<float>(Logic::World::width)) * 2.0f - 1.0f;
+        entity->position.y = (static_cast<float>(y) / static_cast<float>(Logic::World::height)) * 2.0f - 1.0f;
+        entities.push_back(std::move(entity));
+        map[y][x] = type;
     }
+}
 
 void World::removeEntity(int x, int y) {
     if (x >= 0 && x < width && y >= 0 && y < height) {
@@ -88,9 +88,11 @@ void World::removeEntity(int x, int y) {
                 return entity->position.x == x && entity->position.y == y;
             });
         entities.erase(it, entities.end());
-        // Update the map
-        map[y][x] = EntityType::Empty;
     }
+}
+
+const std::vector<std::unique_ptr<Entity>>& World::getEntities() const {
+    return entities;
 }
 
 bool World::checkCollision(const Rectangle& rect1, const Rectangle& rect2) const {

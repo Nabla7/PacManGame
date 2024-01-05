@@ -22,6 +22,9 @@ add_executable(PacManGame main.cpp ${SOURCES})
 # Link SFML libraries
 target_link_libraries(PacManGame sfml-graphics sfml-audio)
 
+# Copy the assets to the build directory
+file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
+
 # If tests are enabled, add them
 option(BUILD_TESTS "Build the tests" ON)
 if(BUILD_TESTS)

@@ -5,6 +5,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "InputHandler.hpp"
+#include "EntityView.hpp"
 #include "../Logic/models/World.hpp"
 #include "../Logic/factories/ConcreteEntityFactory.hpp"
 
@@ -17,10 +18,13 @@ public:
 
     void run();
 
+    const Logic::World& getWorld() const { return world_; }
+
 private:
     sf::RenderWindow window_;
     Logic::World world_;
     Logic::PacmanGameEntityFactory entityFactory_;
+    std::vector<EntityView> entityViews_;
     InputHandler inputHandler_;
 
     void processInput();

@@ -1,6 +1,7 @@
 # Ignore build folders
 build/
 cmake-build-debug/
+.vscode/
 
 # Ignore all log files
 *.log

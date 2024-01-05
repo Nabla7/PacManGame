@@ -1,7 +1,19 @@
-// Entity.hpp
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
+
+#include <utility>
+
 namespace Logic {
+    
+    enum class EntityType {
+        Empty = 0,
+        Wall,
+        Coin,
+        Fruit,
+        Ghost,
+        Pacman
+    };
+
 
 class Entity {
 public:
@@ -9,8 +21,8 @@ public:
 
     // Common attributes for all entities
     struct Position {
-        int x;
-        int y;
+        float x;
+        float y;
     } position;
 
     enum class Direction {
@@ -21,36 +33,58 @@ public:
     } direction;
 
     int speed;
+
+    // Pure virtual function for getting the type of the entity
+    virtual EntityType getType() const = 0;
+
+    // Get the position of the entity
+    Position getPosition() const { return position; }
+
+    // Get the size of the entity (placeholder implementation)
+    virtual std::pair<float, float> getSize() const {
+        return {0.01f, 0.01f};  // Placeholder values
+    }
 };
 
 class Coin : public Entity {
     int value; // The value of the coin when collected
-    public:
-        void setValue(int v) { value = v; }
-        int getValue() const { return value; }
+
+public:
+    void setValue(int v) { value = v; }
+    int getValue() const { return value; }
+
+    EntityType getType() const override { return EntityType::Coin; }
 };
 
 class Fruit : public Entity {
-    // Fruit-specific attributes
     int value; // The value of the fruit when collected
+
+public:
+    EntityType getType() const override { return EntityType::Fruit; }
 };
 
 class Ghost : public Entity {
-    // Ghost-specific attributes
     bool isScared; // Whether the ghost is currently scared
+
+public:
+    EntityType getType() const override { return EntityType::Ghost; }
 };
 
 class Wall : public Entity {
-    // Wall-specific attributes
-    // Walls might not need any specific attributes
+public:
+    EntityType getType() const override { return EntityType::Wall; }
 };
 
 class Pacman : public Entity {
     int lives; // The number of lives left
-    public:
-        void setLives(int l) { lives = l; }
-        int getLives() const { return lives; }
+
+public:
+    void setLives(int l) { lives = l; }
+    int getLives() const { return lives; }
+
+    EntityType getType() const override { return EntityType::Pacman; }
 };
 
 } // namespace Logic
+
 #endif // ENTITY_HPP

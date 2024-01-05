@@ -1,15 +1,31 @@
 // Representation/Game.cpp
 
 #include "Game.hpp"
+#include "Camera.hpp"
 #include "utils/Stopwatch.hpp"
 
 namespace Representation {
 
+// Game.cpp
 Game::Game()
-        : window_(sf::VideoMode(800, 600), "Pacman Game"),
-          inputHandler_(window_),
-          world_(std::make_shared<Logic::PacmanGameEntityFactory>()) { // Initialize world with the factory
-    // Additional initialization if needed
+    : window_(sf::VideoMode(800, 600), "Pacman Game"),
+      inputHandler_(window_),
+      world_(std::make_shared<Logic::PacmanGameEntityFactory>()) { // Initialize world with the factory
+    // Create an EntityView for each Entity in the World
+    int screenWidth = window_.getSize().x;
+    int screenHeight = window_.getSize().y;
+    for (const auto& entity : world_.getEntities()) {
+        entityViews_.emplace_back(window_, *entity, screenWidth, screenHeight);
+    }
+}
+
+void Game::render() {
+    window_.clear();
+    // Draw each EntityView
+    for (auto& entityView : entityViews_) {
+        entityView.draw();
+    }
+    window_.display();
 }
 
 Game::~Game() {
@@ -61,10 +77,6 @@ void Game::update(float deltaTime) {
     world_.update(deltaTime);
 }
 
-void Game::render() {
-    window_.clear();
-    // Draw the world
-    window_.display();
-}
+
 
 } // namespace Representation
