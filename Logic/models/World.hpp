@@ -32,6 +32,8 @@ namespace Logic {
         void update(float deltaTime);
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
 
+        Pacman* getPacman();
+
 
     private:
         std::vector<std::unique_ptr<Entity>> entities;

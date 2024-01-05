@@ -9,6 +9,10 @@ namespace Representation {
 void testEntityPositions() {
     // Initialize the game world
     Logic::World world(std::make_shared<Logic::PacmanGameEntityFactory>());
+
+    // Debug: Print the number of entities in the world
+    std::cout << "Number of entities: " << world.getEntities().size() << std::endl;
+
     sf::RenderWindow window(sf::VideoMode(800, 600), "Entity Position Test");
 
     // Create a Camera object

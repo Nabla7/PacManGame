@@ -10,7 +10,10 @@ namespace Representation {
 
 class EntityView {
 public:
-    EntityView(sf::RenderWindow& window, const Logic::Entity& entity, int screenWidth, int screenHeight);
+    EntityView(sf::RenderWindow& window, 
+                Logic::Entity& entity,
+                Camera& camera,
+                const std::string& textureFile);
 
     void draw();
 
@@ -24,8 +27,8 @@ private:
     sf::RenderWindow& window_;
     const Logic::Entity& entity_;
     sf::Sprite sprite_;
-    sf::Texture texture_;
-    Camera camera_;
+    sf::Texture& texture_;
+    Camera& camera_;
 };
 
 } // namespace Representation

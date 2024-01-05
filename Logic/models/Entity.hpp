@@ -1,10 +1,10 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
-
+#include <iostream>
 #include <utility>
 
 namespace Logic {
-    
+
     enum class EntityType {
         Empty = 0,
         Wall,
@@ -13,10 +13,12 @@ namespace Logic {
         Ghost,
         Pacman
     };
+    
 
 
 class Entity {
 public:
+
     virtual ~Entity() = default;
 
     // Common attributes for all entities
@@ -32,7 +34,7 @@ public:
         Right
     } direction;
 
-    int speed;
+    int speed = 3;
 
     // Pure virtual function for getting the type of the entity
     virtual EntityType getType() const = 0;
@@ -42,8 +44,37 @@ public:
 
     // Get the size of the entity (placeholder implementation)
     virtual std::pair<float, float> getSize() const {
-        return {0.01f, 0.01f};  // Placeholder values
+        return {0.05f, 0.05f};  // Placeholder values
     }
+
+    virtual void move(Direction direction) {}
+
+    static std::string DirectionToString(Direction direction) {
+        switch (direction) {
+            case Direction::Up: return "Up";
+            case Direction::Down: return "Down";
+            case Direction::Left: return "Left";
+            case Direction::Right: return "Right";
+            default: return "Unknown";
+        }
+    }
+};
+
+class Pacman : public Entity {
+    int lives; // The number of lives left
+
+public:
+    void setLives(int l) { lives = l; }
+    int getLives() const { return lives; }
+    Direction direction_;
+    EntityType getType() const override { return EntityType::Pacman; }
+    std::pair<float, float> getSize() const override {
+        return {0.06f, 0.06f};  // Size for Pacman
+    }
+    void move(Direction direction) override {
+        direction_ = direction;
+        std::cout << "Pacman is now moving in direction: " << Entity::DirectionToString(direction) << std::endl;
+}
 };
 
 class Coin : public Entity {
@@ -54,6 +85,9 @@ public:
     int getValue() const { return value; }
 
     EntityType getType() const override { return EntityType::Coin; }
+    std::pair<float, float> getSize() const override {
+        return {0.05f, 0.05f};  // Size for coins
+    }
 };
 
 class Fruit : public Entity {
@@ -61,6 +95,9 @@ class Fruit : public Entity {
 
 public:
     EntityType getType() const override { return EntityType::Fruit; }
+    std::pair<float, float> getSize() const override {
+        return {0.05f, 0.05f};  // Size for fruit
+    }
 };
 
 class Ghost : public Entity {
@@ -68,21 +105,17 @@ class Ghost : public Entity {
 
 public:
     EntityType getType() const override { return EntityType::Ghost; }
+    std::pair<float, float> getSize() const override {
+        return {0.06f, 0.06f};  // Size for ghosts
+    }
 };
 
 class Wall : public Entity {
 public:
     EntityType getType() const override { return EntityType::Wall; }
-};
-
-class Pacman : public Entity {
-    int lives; // The number of lives left
-
-public:
-    void setLives(int l) { lives = l; }
-    int getLives() const { return lives; }
-
-    EntityType getType() const override { return EntityType::Pacman; }
+    std::pair<float, float> getSize() const override {
+        return {0.07f, 0.065f};  // Smaller size for walls
+    }
 };
 
 } // namespace Logic

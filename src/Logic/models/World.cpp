@@ -2,28 +2,25 @@
 
 #include "../../../Logic/models/World.hpp"
 #include <map>
+#include <iostream>
 
 namespace Logic {
 
 World::World(std::shared_ptr<EntityFactory> factory) : entityFactory(std::move(factory)) {
     // Hardcoded map represented by digits
     int initialMap[height][width] = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1},
-    {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1},
-    {1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 3, 1},
-    {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1},
-    {1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1},
-    {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1},
-    {1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1},
-    {1, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 1},
-    {1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {0, 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-    {0, 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
-    {1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 4, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 4, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-};
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1},
+            {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 4, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 5, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 3, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
 
     // Mapping from digits to EntityType values
     std::map<int, EntityType> entityTypeMap = {
@@ -73,8 +70,8 @@ void World::addEntity(EntityType type, int x, int y) {
             default:
                 return; // Do nothing for EntityType::Empty
         }
-        entity->position.x = (static_cast<float>(x) / static_cast<float>(Logic::World::width)) * 2.0f - 1.0f;
-        entity->position.y = (static_cast<float>(y) / static_cast<float>(Logic::World::height)) * 2.0f - 1.0f;
+        entity->position.x = (static_cast<float>(x - width/2) / static_cast<float>(width)) * 2.0f;
+        entity->position.y = (static_cast<float>(y - height/2) / static_cast<float>(height)) * 2.0f;
         entities.push_back(std::move(entity));
         map[y][x] = type;
     }
@@ -140,10 +137,32 @@ void World::update(float deltaTime) {
     // Additional game logic here (e.g., checking game state)
 }
 
+
 void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
-    // Implement Pacman movement logic
-    // e.g., pacman.position.x += pacman.speed * deltaTime * direction_x;
+    // Get the current direction of the Pacman
+    Entity::Direction direction = pacman.direction_;
+
+    // Get the current speed of the Pacman
+    float speed = pacman.speed;
+
+    // Calculate the new position based on the direction and speed
+    switch (direction) {
+        case Entity::Direction::Up:
+            pacman.position.y += speed * deltaTime;
+            break;
+        case Entity::Direction::Down:
+            pacman.position.y -= speed * deltaTime;
+            break;
+        case Entity::Direction::Left:
+            pacman.position.x -= speed * deltaTime;
+            break;
+        case Entity::Direction::Right:
+            pacman.position.x += speed * deltaTime;
+            break;
+    }
+
     // Handle collisions with walls and adjust position
+    // ...
 }
 
 void World::checkPacmanCollisions(Pacman& pacman) {
@@ -159,6 +178,16 @@ void World::updateGhostPosition(Ghost& ghost, float deltaTime) {
 void World::checkGhostCollisions(Ghost& ghost) {
     // Check for collisions with Pacman and handle appropriately
 }
+
+Pacman* World::getPacman() {
+    for (auto& entity : entities) {
+        if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
+            return pacman;
+        }
+    }
+    return nullptr; // Return nullptr if no Pacman found
+}
+
 
 // Define similar functions for other entities if needed
 

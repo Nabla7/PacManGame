@@ -8,6 +8,7 @@
 #include "EntityView.hpp"
 #include "../Logic/models/World.hpp"
 #include "../Logic/factories/ConcreteEntityFactory.hpp"
+#include "Camera.hpp"
 
 namespace Representation {
 
@@ -26,6 +27,7 @@ private:
     Logic::PacmanGameEntityFactory entityFactory_;
     std::vector<EntityView> entityViews_;
     InputHandler inputHandler_;
+    Camera camera_;
 
     void processInput();
     void update(float deltaTime);

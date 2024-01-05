@@ -1,5 +1,5 @@
 ```plaintext
-.PacManGame
+.
 ├── CMakeLists.txt
 ├── Logic
 │   ├── factories
@@ -15,8 +15,10 @@
 ├── README.md
 ├── Representation
 │   ├── Camera.hpp
+│   ├── EntityView.hpp
 │   ├── Game.hpp
-│   └── InputHandler.hpp
+│   ├── InputHandler.hpp
+│   └── TextureManager.hpp
 ├── assets
 │   └── images
 │       └── Sprites.png
@@ -30,13 +32,23 @@
 │   │       └── Stopwatch.cpp
 │   └── Representation
 │       ├── Camera.cpp
+│       ├── EntityView.cpp
 │       ├── Game.cpp
 │       └── InputHandler.cpp
 └── tests
     ├── TestDriver.cpp
     ├── logic_tests
+    │   ├── factories_tests
+    │   ├── models_tests
+    │   │   ├── EntityTest.cpp
+    │   │   ├── WorldAddEntityTest.cpp
+    │   │   └── WorldTest.cpp
     │   └── utils_tests
     │       ├── RandomTest.cpp
     │       └── StopwatchTest.cpp
     └── representation_tests
+        ├── CameraProjectPositionTest.cpp
+        ├── EntityPositionTest.cpp
+        ├── GameTest.cpp
+        └── SpriteTest.cpp
 ```
