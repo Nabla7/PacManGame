@@ -31,7 +31,7 @@ EntityView::EntityView(sf::RenderWindow& window,
             rect = sf::IntRect(1, 4, 50, 50);
             break;
         case Logic::EntityType::Pacman:
-            rect = sf::IntRect(851, 54, 50, 50);
+            rect = sf::IntRect(852, 55, 40, 40);
             break;
         // Add cases for other entity types if needed
         default:

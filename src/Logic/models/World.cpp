@@ -11,15 +11,15 @@ World::World(std::shared_ptr<EntityFactory> factory) : entityFactory(std::move(f
     // Hardcoded map represented by digits
     int initialMap[height][width] = {
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1},
-            {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 2, 0, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 3, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 3, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1},
+            {1, 2, 1, 1, 2, 1, 4, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
+            {1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
+            {1, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 2, 1, 1, 2, 1, 2, 1},
+            {1, 0, 5, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 1},
+            {1, 0, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 1},
+            {1, 0, 1, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
+            {1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
+            {1, 0, 0, 0, 4, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 2, 2, 2, 3, 1},
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
     };
 
@@ -81,15 +81,13 @@ void World::addEntity(EntityType type, int x, int y) {
     }
 }
 
-void World::removeEntity(int x, int y) {
-    if (x >= 0 && x < width && y >= 0 && y < height) {
-        // Find and remove the entity from the vector
-        auto it = std::remove_if(entities.begin(), entities.end(),
-            [x, y](const std::unique_ptr<Entity>& entity) {
-                return entity->position.x == x && entity->position.y == y;
-            });
-        entities.erase(it, entities.end());
-    }
+void World::removeEntity(Entity* entityToRemove) {
+    // Find and remove the entity from the vector
+    auto it = std::remove_if(entities.begin(), entities.end(),
+        [entityToRemove](const std::unique_ptr<Entity>& entity) {
+            return entity.get() == entityToRemove;
+        });
+    entities.erase(it, entities.end());
 }
 
 const std::vector<std::unique_ptr<Entity>>& World::getEntities() const {
@@ -117,8 +115,8 @@ Rectangle World::getEntityBounds(const Entity& entity) const {
     bounds.x = entity.position.x;
     bounds.y = entity.position.y;
 
-    bounds.width = normWidth;
-    bounds.height = normHeight;
+    bounds.width = normWidth*0.95;
+    bounds.height = normHeight*0.95;
 
     return bounds;
 }
@@ -126,24 +124,33 @@ Rectangle World::getEntityBounds(const Entity& entity) const {
 
 
 void World::update(float deltaTime) {
-    // Update the state of the world and its entities
+    std::vector<Entity*> entitiesToRemove;
+
+    // Update logic for all entities
     for (auto& entity : entities) {
-        // Dynamically cast to check entity type and update accordingly
-        if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
-            // Update Pacman's position based on direction and speed
-            updatePacmanPosition(*pacman, deltaTime);
-            checkPacmanCollisions(*pacman);
-        } else if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
-            // Update Ghost's position and behavior
-            updateGhostPosition(*ghost, deltaTime);
-            checkGhostCollisions(*ghost);
-        } else if (auto coin = dynamic_cast<Coin*>(entity.get())) {
-            // For coins might want to check if they need to be collected
-            //checkCoinCollection(*coin);
+        switch (entity->getType()) {
+            case EntityType::Pacman: {
+                auto pacman = static_cast<Pacman*>(entity.get());
+                updatePacmanPosition(*pacman, deltaTime);
+                checkPacmanCollisions(*pacman, entitiesToRemove);
+                break;
+            }
+            case EntityType::Ghost: {
+                auto ghost = static_cast<Ghost*>(entity.get());
+                updateGhostPosition(*ghost, deltaTime);
+                checkGhostCollisions(*ghost);
+                break;
+            }
+                // Handle other entity types if necessary
+            default:
+                break;
         }
-        // similar logic for Fruit and Wall
     }
-    // Additional game logic here (e.g., checking game state)
+
+    // Remove entities marked for deletion
+    for (auto entityToRemove : entitiesToRemove) {
+        removeEntity(entityToRemove);
+    }
 }
 
 
@@ -152,41 +159,8 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     Entity::Direction direction = pacman.direction_;
     Entity::Direction desiredDirection = pacman.desiredDirection_;
     float speed = pacman.speed;
-
-    // Convert normalized position to grid coordinates
-    int gridX = (pacman.position.x + 1.0f) / 2.0f * width;
-    int gridY = (pacman.position.y + 1.0f) / 2.0f * height;
-
-    // Check for walls in adjacent tiles
-    bool wallAbove = isWallAbove(gridX, gridY);
-    bool wallBelow = isWallBelow(gridX, gridY);
-    bool wallLeft = isWallLeft(gridX, gridY);
-    bool wallRight = isWallRight(gridX, gridY);
-
-    // Check feasibility for the desired direction
-    // Check if the desired direction is feasible and if Pacman is aligned with the grid
-    bool canMoveInDesiredDirection = false;
-    bool isAlignedWithGrid = isPacmanAlignedWithGrid(pacman);
-
-    switch (pacman.desiredDirection_) {
-        case Entity::Direction::Up:
-            canMoveInDesiredDirection = !wallAbove && isAlignedWithGrid;
-            break;
-        case Entity::Direction::Down:
-            canMoveInDesiredDirection = !wallBelow && isAlignedWithGrid;
-            break;
-        case Entity::Direction::Left:
-            canMoveInDesiredDirection = !wallLeft && isAlignedWithGrid;
-            break;
-        case Entity::Direction::Right:
-            canMoveInDesiredDirection = !wallRight && isAlignedWithGrid;
-            break;
-    }
-
-    // Update direction if feasible
-    if (canMoveInDesiredDirection) {
-        pacman.direction_ = pacman.desiredDirection_;
-    }
+    
+    pacman.direction_ = pacman.desiredDirection_;
 
     // Calculate the new position based on the direction and speed
     auto newPosition = pacman.position;
@@ -205,8 +179,8 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     Rectangle newBounds;
     newBounds.x = newPosition.x;
     newBounds.y = newPosition.y;
-    newBounds.width = 1.0f / width * 2.0f;  // Scaling to normalized coordinates
-    newBounds.height = 1.0f / height * 2.0f;
+    newBounds.width = (1.0f / width * 2.0f)*0.95;  // Scaling to normalized coordinates
+    newBounds.height = (1.0f / height * 2.0f)*0.95;
 
 
     // Check for a collision with a wall
@@ -214,8 +188,9 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
         if (entity->getType() == EntityType::Wall) {
             Rectangle wallBounds = getEntityBounds(*entity);
             if (checkCollision(newBounds, wallBounds)) {
-                    // Collision detected, don't update Pacman's position
-                    return;
+                std::cout << "Collision detected with wall. Pacman's position will not be updated." << std::endl;
+                // Collision detected, don't update Pacman's position
+                return;
 
             }
         }
@@ -226,10 +201,26 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     pacman.position = newPosition;
 }
 
-void World::checkPacmanCollisions(Pacman& pacman) {
-    // Check for collisions with other entities like coins, fruits, ghosts
-    // Handle each collision appropriately (e.g., increase score, change game state)
+void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove) {
+    Rectangle pacmanBounds = getEntityBounds(pacman);
+
+    for (auto& entity : entities) {
+        if (entity->getType() == EntityType::Coin) {
+            Rectangle coinBounds = getEntityBounds(*entity);
+            if (checkCollision(pacmanBounds, coinBounds)) {
+                // Collision with a coin detected
+                entitiesToRemove.push_back(entity.get());
+            }
+        }else if (entity->getType() == EntityType::Fruit){
+            Rectangle fruitBounds = getEntityBounds(*entity);
+            if (checkCollision(pacmanBounds, fruitBounds)) {
+                // Collision with a fruit detected
+                entitiesToRemove.push_back(entity.get());
+            }
+        }
+    }
 }
+
 
 void World::updateGhostPosition(Ghost& ghost, float deltaTime) {
     // Implement Ghost AI and movement logic
@@ -249,47 +240,11 @@ Pacman* World::getPacman() {
     return nullptr; // Return nullptr if no Pacman found
 }
 
-bool World::isWallAbove(int gridX, int gridY) {
-    if (gridY - 1 >= 0) {
-        return map[gridY - 1][gridX] == EntityType::Wall;
-    }
-    return false;
-}
 
-bool World::isWallBelow(int gridX, int gridY) {
-    if (gridY + 1 < height) {
-        return map[gridY + 1][gridX] == EntityType::Wall;
-    }
-    return false;
-}
 
-bool World::isWallLeft(int gridX, int gridY) {
-    if (gridX - 1 >= 0) {
-        return map[gridY][gridX - 1] == EntityType::Wall;
-    }
-    return false;
-}
 
-bool World::isWallRight(int gridX, int gridY) {
-    if (gridX + 1 < width) {
-        return map[gridY][gridX + 1] == EntityType::Wall;
-    }
-    return false;
-}
 
-bool World::isPacmanAlignedWithGrid(const Pacman& pacman) {
-    // Determine if Pacman's position is close enough to the grid lines
-    // This might involve checking if Pacman's position is near integer values
-    // Adjust the threshold based on how strict you want the alignment check to be
-    const float alignmentThreshold = 0.45f;
-    float gridPosX = (pacman.position.x + 1.0f) / 2.0f * width;
-    float gridPosY = (pacman.position.y + 1.0f) / 2.0f * height;
 
-    bool alignedX = std::fabs(gridPosX - std::round(gridPosX)) < alignmentThreshold;
-    bool alignedY = std::fabs(gridPosY - std::round(gridPosY)) < alignmentThreshold;
-
-    return alignedX && alignedY;
-}
 
 
 } // namespace Logic

@@ -86,10 +86,24 @@ void Game::processInput() {
     }
 }
 
+    void Game::update(float deltaTime) {
+        // Update the world
+        world_.update(deltaTime);
+
+        // Clear existing entity views
+        entityViews_.clear();
+
+        // Recreate entity views for updated entities in the world
+        for (const auto& entity : world_.getEntities()) {
+            entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
+        }
+    }
+/*
 void Game::update(float deltaTime) {
     // Update the world
     world_.update(deltaTime);
 }
+ */
 
 
 

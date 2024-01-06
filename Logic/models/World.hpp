@@ -25,7 +25,7 @@ namespace Logic {
         ~World();
 
         void addEntity(EntityType type, int x, int y);
-        void removeEntity(int x, int y);
+        void removeEntity(Entity *entityToRemove);
         const std::vector<std::unique_ptr<Entity>>& getEntities() const;
         void update(float deltaTime);
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
@@ -41,7 +41,7 @@ namespace Logic {
         // Helper methods
         Rectangle getEntityBounds(const Entity& entity) const;
         void updatePacmanPosition(Pacman &pacman, float deltaTime);
-        void checkPacmanCollisions(Pacman &pacman);
+        void checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove);
         void updateGhostPosition(Ghost &ghost, float deltaTime);
         void checkGhostCollisions(Ghost &ghost);
 
