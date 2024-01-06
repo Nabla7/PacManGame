@@ -44,6 +44,14 @@ namespace Logic {
         void checkPacmanCollisions(Pacman &pacman);
         void updateGhostPosition(Ghost &ghost, float deltaTime);
         void checkGhostCollisions(Ghost &ghost);
+
+        bool isWallAbove(int gridX, int gridY);
+
+        bool isWallBelow(int gridX, int gridY);
+
+        bool isWallLeft(int gridX, int gridY);
+
+        bool isWallRight(int gridX, int gridY);
     };
 
 } // namespace Logic

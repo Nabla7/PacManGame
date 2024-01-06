@@ -13,7 +13,6 @@ namespace Logic {
         Ghost,
         Pacman
     };
-    
 
 
 class Entity {

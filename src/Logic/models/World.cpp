@@ -11,14 +11,14 @@ World::World(std::shared_ptr<EntityFactory> factory) : entityFactory(std::move(f
     int initialMap[height][width] = {
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
             {1, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1},
-            {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 5, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 3, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+            {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 2, 0, 1, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 3, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
     };
 
@@ -106,18 +106,23 @@ bool World::checkCollision(const Rectangle& rect1, const Rectangle& rect2) const
     return false;
 }
 
-Rectangle World::getEntityBounds(const Entity& entity) const {
-    // Placeholder for actual implementation
-    // This should return the bounding rectangle of the entity
-    Rectangle bounds;
-    // Calculate bounds based on the entity's position and size
-    // For example:
-    bounds.x = entity.position.x;
-    bounds.y = entity.position.y;
-    bounds.width = 1.0f; // Placeholder value
-    bounds.height = 1.0f; // Placeholder value
-    return bounds;
-}
+    Rectangle World::getEntityBounds(const Entity& entity) const {
+        Rectangle bounds;
+
+        // Convert to normalized coordinates
+        float normWidth = 1.0f / width * 2.0f;
+        float normHeight = 1.0f / height * 2.0f;
+
+        bounds.x = entity.position.x;
+        bounds.y = entity.position.y;
+
+        bounds.width = normWidth;
+        bounds.height = normHeight;
+
+        return bounds;
+    }
+
+
 
 void World::update(float deltaTime) {
     // Update the state of the world and its entities
@@ -142,30 +147,57 @@ void World::update(float deltaTime) {
 
 
 void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
-    // Get the current direction of the Pacman
+    // Get the current direction and speed of the Pacman
     Entity::Direction direction = pacman.direction_;
-
-    // Get the current speed of the Pacman
     float speed = pacman.speed;
 
+    // Convert normalized position to grid coordinates
+    int gridX = (pacman.position.x + 1.0f) / 2.0f * width;
+    int gridY = (pacman.position.y + 1.0f) / 2.0f * height;
+
+    // Check for walls in adjacent tiles
+    bool wallAbove = isWallAbove(gridX, gridY);
+    bool wallBelow = isWallBelow(gridX, gridY);
+    bool wallLeft = isWallLeft(gridX, gridY);
+    bool wallRight = isWallRight(gridX, gridY);
+
+    // Determine if Pacman is in a horizontal or vertical corridor
+    bool inHorizontalCorridor = wallAbove && wallBelow;
+    bool inVerticalCorridor = wallLeft && wallRight;
+
     // Calculate the new position based on the direction and speed
-    switch (direction) {
-        case Entity::Direction::Up:
-            pacman.position.y -= speed * deltaTime;
-            break;
-        case Entity::Direction::Down:
-            pacman.position.y += speed * deltaTime;
-            break;
-        case Entity::Direction::Left:
-            pacman.position.x -= speed * deltaTime;
-            break;
-        case Entity::Direction::Right:
-            pacman.position.x += speed * deltaTime;
-            break;
+    auto newPosition = pacman.position;
+    if (direction == Entity::Direction::Up && !inHorizontalCorridor) {
+        newPosition.y -= speed * deltaTime;
+    } else if (direction == Entity::Direction::Down && !inHorizontalCorridor) {
+        newPosition.y += speed * deltaTime;
+    } else if (direction == Entity::Direction::Left && !inVerticalCorridor) {
+        newPosition.x -= speed * deltaTime;
+    } else if (direction == Entity::Direction::Right && !inVerticalCorridor) {
+        newPosition.x += speed * deltaTime;
     }
 
-    // Handle collisions with walls and adjust position
-    // ...
+    // Create a rectangle for the new position
+    Rectangle newBounds;
+    newBounds.x = newPosition.x;
+    newBounds.y = newPosition.y;
+    newBounds.width = 1.0f / width * 2.0f;  // Scaling to normalized coordinates
+    newBounds.height = 1.0f / height * 2.0f;
+
+
+    // Check for a collision with a wall
+    for (const auto& entity : entities) {
+        if (entity->getType() == EntityType::Wall) {
+            Rectangle wallBounds = getEntityBounds(*entity);
+            if (checkCollision(newBounds, wallBounds)) {
+                // Collision detected, don't update Pacman's position
+                return;
+            }
+        }
+    }
+
+    // No collision detected, update Pacman's position
+    pacman.position = newPosition;
 }
 
 void World::checkPacmanCollisions(Pacman& pacman) {
@@ -191,7 +223,33 @@ Pacman* World::getPacman() {
     return nullptr; // Return nullptr if no Pacman found
 }
 
+bool World::isWallAbove(int gridX, int gridY) {
+    if (gridY - 1 >= 0) {
+        return map[gridY - 1][gridX] == EntityType::Wall;
+    }
+    return false;
+}
 
-// Define similar functions for other entities if needed
+bool World::isWallBelow(int gridX, int gridY) {
+    if (gridY + 1 < height) {
+        return map[gridY + 1][gridX] == EntityType::Wall;
+    }
+    return false;
+}
+
+bool World::isWallLeft(int gridX, int gridY) {
+    if (gridX - 1 >= 0) {
+        return map[gridY][gridX - 1] == EntityType::Wall;
+    }
+    return false;
+}
+
+bool World::isWallRight(int gridX, int gridY) {
+    if (gridX + 1 < width) {
+        return map[gridY][gridX + 1] == EntityType::Wall;
+    }
+    return false;
+}
+
 
 } // namespace Logic
