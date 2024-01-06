@@ -23,6 +23,7 @@ public:
 
 private:
     sf::RenderWindow window_;
+    sf::View view_;
     Logic::World world_;
     Logic::PacmanGameEntityFactory entityFactory_;
     std::vector<EntityView> entityViews_;
@@ -32,6 +33,8 @@ private:
     void processInput();
     void update(float deltaTime);
     void render();
+
+    std::string textureFilePath = "assets/images/Sprites.png";
 };
 
 } // namespace Representation

@@ -3,6 +3,7 @@
 #include "../../../Logic/models/World.hpp"
 #include <map>
 #include <iostream>
+#include <cmath>
 
 namespace Logic {
 
@@ -106,21 +107,21 @@ bool World::checkCollision(const Rectangle& rect1, const Rectangle& rect2) const
     return false;
 }
 
-    Rectangle World::getEntityBounds(const Entity& entity) const {
-        Rectangle bounds;
+Rectangle World::getEntityBounds(const Entity& entity) const {
+    Rectangle bounds;
 
-        // Convert to normalized coordinates
-        float normWidth = 1.0f / width * 2.0f;
-        float normHeight = 1.0f / height * 2.0f;
+    // Convert to normalized coordinates
+    float normWidth = 1.0f / width * 2.0f;
+    float normHeight = 1.0f / height * 2.0f;
 
-        bounds.x = entity.position.x;
-        bounds.y = entity.position.y;
+    bounds.x = entity.position.x;
+    bounds.y = entity.position.y;
 
-        bounds.width = normWidth;
-        bounds.height = normHeight;
+    bounds.width = normWidth;
+    bounds.height = normHeight;
 
-        return bounds;
-    }
+    return bounds;
+}
 
 
 
@@ -149,6 +150,7 @@ void World::update(float deltaTime) {
 void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     // Get the current direction and speed of the Pacman
     Entity::Direction direction = pacman.direction_;
+    Entity::Direction desiredDirection = pacman.desiredDirection_;
     float speed = pacman.speed;
 
     // Convert normalized position to grid coordinates
@@ -161,21 +163,43 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     bool wallLeft = isWallLeft(gridX, gridY);
     bool wallRight = isWallRight(gridX, gridY);
 
-    // Determine if Pacman is in a horizontal or vertical corridor
-    bool inHorizontalCorridor = wallAbove && wallBelow;
-    bool inVerticalCorridor = wallLeft && wallRight;
+    // Check feasibility for the desired direction
+    // Check if the desired direction is feasible and if Pacman is aligned with the grid
+    bool canMoveInDesiredDirection = false;
+    bool isAlignedWithGrid = isPacmanAlignedWithGrid(pacman);
+
+    switch (pacman.desiredDirection_) {
+        case Entity::Direction::Up:
+            canMoveInDesiredDirection = !wallAbove && isAlignedWithGrid;
+            break;
+        case Entity::Direction::Down:
+            canMoveInDesiredDirection = !wallBelow && isAlignedWithGrid;
+            break;
+        case Entity::Direction::Left:
+            canMoveInDesiredDirection = !wallLeft && isAlignedWithGrid;
+            break;
+        case Entity::Direction::Right:
+            canMoveInDesiredDirection = !wallRight && isAlignedWithGrid;
+            break;
+    }
+
+    // Update direction if feasible
+    if (canMoveInDesiredDirection) {
+        pacman.direction_ = pacman.desiredDirection_;
+    }
 
     // Calculate the new position based on the direction and speed
     auto newPosition = pacman.position;
-    if (direction == Entity::Direction::Up && !inHorizontalCorridor) {
+    if (direction == Entity::Direction::Up) {
         newPosition.y -= speed * deltaTime;
-    } else if (direction == Entity::Direction::Down && !inHorizontalCorridor) {
+    } else if (direction == Entity::Direction::Down) {
         newPosition.y += speed * deltaTime;
-    } else if (direction == Entity::Direction::Left && !inVerticalCorridor) {
+    } else if (direction == Entity::Direction::Left) {
         newPosition.x -= speed * deltaTime;
-    } else if (direction == Entity::Direction::Right && !inVerticalCorridor) {
+    } else if (direction == Entity::Direction::Right) {
         newPosition.x += speed * deltaTime;
     }
+
 
     // Create a rectangle for the new position
     Rectangle newBounds;
@@ -190,11 +214,13 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
         if (entity->getType() == EntityType::Wall) {
             Rectangle wallBounds = getEntityBounds(*entity);
             if (checkCollision(newBounds, wallBounds)) {
-                // Collision detected, don't update Pacman's position
-                return;
+                    // Collision detected, don't update Pacman's position
+                    return;
+
             }
         }
     }
+
 
     // No collision detected, update Pacman's position
     pacman.position = newPosition;
@@ -249,6 +275,20 @@ bool World::isWallRight(int gridX, int gridY) {
         return map[gridY][gridX + 1] == EntityType::Wall;
     }
     return false;
+}
+
+bool World::isPacmanAlignedWithGrid(const Pacman& pacman) {
+    // Determine if Pacman's position is close enough to the grid lines
+    // This might involve checking if Pacman's position is near integer values
+    // Adjust the threshold based on how strict you want the alignment check to be
+    const float alignmentThreshold = 0.45f;
+    float gridPosX = (pacman.position.x + 1.0f) / 2.0f * width;
+    float gridPosY = (pacman.position.y + 1.0f) / 2.0f * height;
+
+    bool alignedX = std::fabs(gridPosX - std::round(gridPosX)) < alignmentThreshold;
+    bool alignedY = std::fabs(gridPosY - std::round(gridPosY)) < alignmentThreshold;
+
+    return alignedX && alignedY;
 }
 
 

@@ -48,6 +48,13 @@ public:
 
     virtual void move(Direction direction) {}
 
+    Direction desiredDirection_;
+
+    void setDesiredDirection(Entity::Direction dir) {
+        desiredDirection_ = dir;
+    }
+
+
     static std::string DirectionToString(Direction direction) {
         switch (direction) {
             case Direction::Up: return "Up";
@@ -82,7 +89,7 @@ public:
 
     EntityType getType() const override { return EntityType::Coin; }
     std::pair<float, float> getSize() const override {
-        return {0.5f, 0.5f};  // Size for coins
+        return {1.0f, 1.0f};  // Size for coins
     }
 };
 
@@ -104,7 +111,7 @@ class Wall : public Entity {
 public:
     EntityType getType() const override { return EntityType::Wall; }
     std::pair<float, float> getSize() const override {
-        return {1.08f, 1.08f};  // Size for walls
+        return {1.0f, 1.0f};  // Size for walls
     }
 };
 

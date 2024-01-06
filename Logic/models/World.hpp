@@ -52,6 +52,8 @@ namespace Logic {
         bool isWallLeft(int gridX, int gridY);
 
         bool isWallRight(int gridX, int gridY);
+
+        bool isPacmanAlignedWithGrid(const Pacman &pacman);
     };
 
 } // namespace Logic
