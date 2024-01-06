@@ -13,21 +13,38 @@ public:
         : screenWidth_(screenWidth), screenHeight_(screenHeight) {}
 
     std::pair<float, float> projectPosition(float x, float y) const {
-
-        // Convert to pixel coordinates
-        float pixelX = (x + 1.25f) / 2.0f * screenWidth_;
-        float pixelY = (0.40f - y) / 2.0f * screenHeight_; // Inverting Y to match screen coordinates
+        // Assuming world's center is at (0,0) and dimensions are normalized [-1, 1]
+        float pixelX = (x + 1.0f) / 2.0f * screenWidth_ ; // Normalized X to [0, 1] then scale
+        float pixelY = (y + 1.0f) / 2.0f * screenHeight_; // Normalized Y to [0, 1] then scale
         return {pixelX, pixelY};
     }
 
 
+
     std::pair<float, float> projectSize(float width, float height) const {
-        float pixelWidth = width / 2.0f * screenWidth_;
-        float pixelHeight = height / 2.0f * screenHeight_;
+        // Calculate the aspect ratios
+        float worldAspectRatio = static_cast<float>(Logic::World::width) / static_cast<float>(Logic::World::height);
+        float screenAspectRatio = static_cast<float>(screenWidth_) / static_cast<float>(screenHeight_);
+
+        // Adjust size based on aspect ratios
+        float adjustedWidth = width;
+        float adjustedHeight = height;
+
+        if (screenAspectRatio > worldAspectRatio) {
+            // Screen is wider than the world
+            adjustedHeight *= screenAspectRatio / worldAspectRatio;
+        } else {
+            // Screen is taller than the world
+            adjustedWidth *= worldAspectRatio / screenAspectRatio;
+        }
+
+        float pixelWidth = adjustedWidth * screenWidth_ / Logic::World::width;
+        float pixelHeight = adjustedHeight * screenHeight_ / Logic::World::height;
         return {pixelWidth, pixelHeight};
     }
-    
-    
+
+
+
 
 private:
     int screenWidth_;

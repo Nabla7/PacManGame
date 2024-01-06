@@ -10,10 +10,10 @@ World::World(std::shared_ptr<EntityFactory> factory) : entityFactory(std::move(f
     // Hardcoded map represented by digits
     int initialMap[height][width] = {
             {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1},
+            {1, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1},
             {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
             {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
-            {1, 4, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
+            {1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
             {1, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             {1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
             {1, 5, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1},
@@ -70,8 +70,11 @@ void World::addEntity(EntityType type, int x, int y) {
             default:
                 return; // Do nothing for EntityType::Empty
         }
-        entity->position.x = (static_cast<float>(x - width/2) / static_cast<float>(width)) * 2.0f;
-        entity->position.y = (static_cast<float>(y - height/2) / static_cast<float>(height)) * 2.0f;
+
+        entity->position.x = (static_cast<float>(x) / static_cast<float>(width - 1)) * 2.0f - 1.0f;
+        entity->position.y = ((static_cast<float>(y) / static_cast<float>(height - 1)) * 2.0f - 1.0f);
+
+
         entities.push_back(std::move(entity));
         map[y][x] = type;
     }
@@ -148,10 +151,10 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     // Calculate the new position based on the direction and speed
     switch (direction) {
         case Entity::Direction::Up:
-            pacman.position.y += speed * deltaTime;
+            pacman.position.y -= speed * deltaTime;
             break;
         case Entity::Direction::Down:
-            pacman.position.y -= speed * deltaTime;
+            pacman.position.y += speed * deltaTime;
             break;
         case Entity::Direction::Left:
             pacman.position.x -= speed * deltaTime;

@@ -44,7 +44,7 @@ public:
 
     // Get the size of the entity (placeholder implementation)
     virtual std::pair<float, float> getSize() const {
-        return {0.05f, 0.05f};  // Placeholder values
+        return {1.0f, 1.0f};  // Placeholder values
     }
 
     virtual void move(Direction direction) {}
@@ -68,9 +68,6 @@ public:
     int getLives() const { return lives; }
     Direction direction_;
     EntityType getType() const override { return EntityType::Pacman; }
-    std::pair<float, float> getSize() const override {
-        return {0.06f, 0.06f};  // Size for Pacman
-    }
     void move(Direction direction) override {
         direction_ = direction;
         std::cout << "Pacman is now moving in direction: " << Entity::DirectionToString(direction) << std::endl;
@@ -86,7 +83,7 @@ public:
 
     EntityType getType() const override { return EntityType::Coin; }
     std::pair<float, float> getSize() const override {
-        return {0.05f, 0.05f};  // Size for coins
+        return {0.5f, 0.5f};  // Size for coins
     }
 };
 
@@ -95,9 +92,6 @@ class Fruit : public Entity {
 
 public:
     EntityType getType() const override { return EntityType::Fruit; }
-    std::pair<float, float> getSize() const override {
-        return {0.05f, 0.05f};  // Size for fruit
-    }
 };
 
 class Ghost : public Entity {
@@ -105,16 +99,13 @@ class Ghost : public Entity {
 
 public:
     EntityType getType() const override { return EntityType::Ghost; }
-    std::pair<float, float> getSize() const override {
-        return {0.06f, 0.06f};  // Size for ghosts
-    }
 };
 
 class Wall : public Entity {
 public:
     EntityType getType() const override { return EntityType::Wall; }
     std::pair<float, float> getSize() const override {
-        return {0.07f, 0.065f};  // Smaller size for walls
+        return {1.08f, 1.08f};  // Size for walls
     }
 };
 

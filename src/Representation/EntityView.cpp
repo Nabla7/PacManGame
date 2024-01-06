@@ -16,7 +16,6 @@ EntityView::EntityView(sf::RenderWindow& window,
         camera_(camera),
         texture_(TextureManager::getInstance().getTexture(textureFile))
          {
-    // Load the sprite sheet
     
 
     // Select the appropriate sprite based on the entity type
@@ -46,33 +45,34 @@ EntityView::EntityView(sf::RenderWindow& window,
     sprite_.setOrigin(sprite_.getLocalBounds().width / 2, sprite_.getLocalBounds().height / 2);
 }
 
-void EntityView::draw() {
-    // Get the entity's position
-    Logic::Entity::Position pos = entity_.getPosition();
+    void EntityView::draw() {
+        // Get the entity's position
+        Logic::Entity::Position pos = entity_.getPosition();
 
-    // Project the entity's position to pixel coordinates
-    auto [pixelX, pixelY] = camera_.projectPosition(pos.x, pos.y);
+        // Project the entity's position to pixel coordinates
+        auto [pixelX, pixelY] = camera_.projectPosition(pos.x, pos.y);
 
-    // Get the entity's size
-    auto [width, height] = entity_.getSize();
+        // Get the entity's size
+        auto [width, height] = entity_.getSize();
 
-    // Project the entity's size to pixel coordinates
-    auto [pixelWidth, pixelHeight] = camera_.projectSize(width, height);
+        // Project the entity's size to pixel coordinates
+        auto [pixelWidth, pixelHeight] = camera_.projectSize(width, height);
 
-    if (entity_.getType() == Logic::EntityType::Wall) {
-        // Create a blue rectangle for the wall
-        sf::RectangleShape wallRect(sf::Vector2f(pixelWidth, pixelHeight));
-        wallRect.setPosition(pixelX, pixelY);
-        wallRect.setFillColor(sf::Color::Blue);  // Set the color to blue
-        window_.draw(wallRect);  // Draw the rectangle
-    } else {
-        // Set the sprite's position and scale
-        sprite_.setPosition(pixelX + pixelWidth*0.70f, pixelY + pixelHeight*0.70f);
-        sprite_.setScale(pixelWidth / sprite_.getLocalBounds().width, pixelHeight / sprite_.getLocalBounds().height);
-
-        // Draw the sprite
-        window_.draw(sprite_);
+        if (entity_.getType() == Logic::EntityType::Wall) {
+            // For a wall (rectangle), position is the top-left corner
+            sf::RectangleShape wallRect(sf::Vector2f(pixelWidth, pixelHeight));
+            wallRect.setPosition(pixelX - pixelWidth / 2, pixelY - pixelHeight / 2);
+            wallRect.setFillColor(sf::Color::Blue);
+            window_.draw(wallRect);
+        } else {
+            // For a sprite, set the origin to its center
+            sprite_.setOrigin(sprite_.getLocalBounds().width / 2, sprite_.getLocalBounds().height / 2);
+            sprite_.setPosition(pixelX, pixelY);
+            sprite_.setScale(pixelWidth / sprite_.getLocalBounds().width, pixelHeight / sprite_.getLocalBounds().height);
+            window_.draw(sprite_);
+        }
     }
-}
+
+
 
 } // namespace Representation

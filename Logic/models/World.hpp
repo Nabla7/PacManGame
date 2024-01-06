@@ -18,10 +18,8 @@ namespace Logic {
 
     class World {
     public:
-        static constexpr int width = 29;
-        static constexpr int height = 31;
-        int getWidth() const { return width; }
-        int getHeight() const { return height; }
+        static constexpr int width = 20;
+        static constexpr int height = 11;
 
         World(std::shared_ptr<EntityFactory> factory); // Constructor with factory
         ~World();

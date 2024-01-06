@@ -8,7 +8,7 @@ namespace Representation {
 
 // Game.cpp
 Game::Game()
-    : window_(sf::VideoMode(800, 600), "Pacman Game"),
+    : window_(sf::VideoMode(20*32, 11*32), "Pacman Game"),
       inputHandler_(window_),
       world_(std::make_shared<Logic::PacmanGameEntityFactory>()),
       camera_(window_.getSize().x, window_.getSize().y) { // Initialize world with the factory

@@ -12,7 +12,7 @@ int testWorldAddEntity() {
 
     // Test 1: Check if entity is added at correct normalized position
     std::cout << "Running Test 1: Check if entity is added at correct normalized position...\n";
-    world.addEntity(EntityType::Coin, 14, 15); // Add a coin at the center of the map
+    world.addEntity(EntityType::Coin, 11, 6); // Add a coin at the center of the map
     const auto& entities = world.getEntities();
     float actualX = entities.back()->position.x;
     float actualY = entities.back()->position.y;
