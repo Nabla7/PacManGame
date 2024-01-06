@@ -34,7 +34,7 @@ public:
         Right
     } direction;
 
-    int speed = 3;
+    float speed = 0.25;
 
     // Pure virtual function for getting the type of the entity
     virtual EntityType getType() const = 0;

@@ -33,18 +33,24 @@ Game::~Game() {
 }
 
 void Game::run() {
-    utils::Stopwatch& stopwatch = utils::Stopwatch::getInstance();
+    sf::Clock clock;
+    float timeSinceLastUpdate = 0.0f;
+    const float TimePerFrame = 1.f / 60.f; // 60 updates per second
+
     while (window_.isOpen()) {
-        stopwatch.start();
+        processInput(); // Handle user input
 
-        processInput();
-        update(stopwatch.getElapsedTime());
-        render();
+        // Update game logic at a fixed time step
+        timeSinceLastUpdate += clock.restart().asSeconds();
+        while (timeSinceLastUpdate > TimePerFrame) {
+            timeSinceLastUpdate -= TimePerFrame;
+            update(TimePerFrame); // Update game state
+        }
 
-        stopwatch.stop();
-        stopwatch.capFrameRate();
+        render(); // Render the frame
     }
 }
+
 
 void Game::processInput() {
     Action action = inputHandler_.handleInput();
