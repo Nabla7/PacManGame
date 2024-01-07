@@ -172,6 +172,7 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     
     pacman.direction_ = pacman.desiredDirection_;
 
+    
     // Calculate the new position based on the direction and speed
     auto newPosition = pacman.position;
     if (direction == Entity::Direction::Up) {
@@ -241,7 +242,7 @@ void World::checkGhostCollisions(Ghost& ghost) {
     // Check for collisions with Pacman and handle appropriately
 }
 
-Pacman* World::getPacman() {
+Pacman * World::getPacman() const {
     for (auto& entity : entities) {
         if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
             return pacman;
@@ -249,12 +250,5 @@ Pacman* World::getPacman() {
     }
     return nullptr; // Return nullptr if no Pacman found
 }
-
-
-
-
-
-
-
 
 } // namespace Logic

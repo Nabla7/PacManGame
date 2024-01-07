@@ -6,6 +6,7 @@
 #include "Game.hpp"
 #include "Camera.hpp"
 #include "utils/Stopwatch.hpp"
+#include "GameState.hpp"
 
 namespace Representation {
 
@@ -26,6 +27,9 @@ Game::Game()
 
         window_.setView(view_);
 
+        // Initialize the state manager with the menu state
+        stateManager_.pushState(std::make_unique<MenuState>());
+
             std::cout << "Current path is " << std::filesystem::current_path() << '\n';
         try {
           if (!font.loadFromFile("assets/font/Pixeboy.ttf")) {
@@ -45,17 +49,15 @@ Game::Game()
 
 void Game::render() {
     window_.clear();
-    // Draw each EntityView
-    for (auto& entityView : entityViews_) {
-        entityView.draw();
-    }
 
-    // Update and draw score
-    scoreText.setString("Score: " + std::to_string(world_.getScore()));
-    window_.draw(scoreText);
+    State* currentState = stateManager_.getCurrentState();
+    if (currentState) {
+        currentState->render(*this);
+    }
 
     window_.display();
 }
+
 
 Game::~Game() {
     // Cleanup if necessary
@@ -81,45 +83,35 @@ void Game::run() {
 
 
 void Game::processInput() {
-    Action action = inputHandler_.handleInput();
-    Logic::Pacman* pacman = world_.getPacman(); // Get Pacman from world
-    if (pacman) { // Check if Pacman is not null
-        switch (action) {
-            case Action::MoveUp:
-                pacman->setDesiredDirection(Logic::Entity::Direction::Up);
-                break;
-            case Action::MoveDown:
-                pacman->setDesiredDirection(Logic::Entity::Direction::Down);
-                break;
-            case Action::MoveLeft:
-                pacman->setDesiredDirection(Logic::Entity::Direction::Left);
-                break;
-            case Action::MoveRight:
-                pacman->setDesiredDirection(Logic::Entity::Direction::Right);
-                break;
-            case Action::Pause:
-                // Pause the game
-                break;
-            case Action::Quit:
-                window_.close();
-                break;
-            default:
-                break;
-        }
+    State* currentState = stateManager_.getCurrentState();
+    if (currentState) {
+        currentState->handleInput(*this);
     }
 }
 
 void Game::update(float deltaTime) {
-    // Update the world
-    world_.update(deltaTime);
-
-    // Clear existing entity views
-    entityViews_.clear();
-
-    // Recreate entity views for updated entities in the world
-    for (const auto& entity : world_.getEntities()) {
-        entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
+    State* currentState = stateManager_.getCurrentState();
+    if (currentState) {
+        currentState->update(*this, deltaTime);
     }
+}
+
+
+
+sf::RenderWindow& Game::getWindow() {
+    return window_;
+}
+
+InputHandler& Game::getInputHandler() {
+    return inputHandler_;
+}
+
+StateManager& Game::getStateManager() {
+    return stateManager_;
+}
+
+Logic::World& Game::getWorld() {
+    return world_;
 }
 
 
