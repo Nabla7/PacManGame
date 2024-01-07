@@ -17,10 +17,11 @@ jobs:
             mkdir build
             cd build
             cmake ..
-            pwd
             cmake --build .
             pwd
             cd ..
+            pwd
+            ls
             ./build/PacManGame
           when: always
 
