@@ -22,7 +22,7 @@ jobs:
             cd ..
             pwd
             ls
-            ./build/PacManGame
+            ./build/bin/PacManGame
           when: always
 
 workflows:
