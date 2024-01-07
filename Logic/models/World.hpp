@@ -3,6 +3,7 @@
 
 #include "Entity.hpp"
 #include "../factories/EntityFactory.hpp" // Include the EntityFactory interface
+#include "../utils/Observer.hpp"
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -33,10 +34,14 @@ namespace Logic {
         Pacman* getPacman();
 
 
+        int getScore() const;
+
     private:
         std::vector<std::unique_ptr<Entity>> entities;
         EntityType map[height][width];
         std::shared_ptr<EntityFactory> entityFactory; // Factory member
+        Subject eventSubject;    // Subject for observer pattern
+        Score scoreObserver;     // Observer for scoring
 
         // Helper methods
         Rectangle getEntityBounds(const Entity& entity) const;
@@ -54,6 +59,7 @@ namespace Logic {
         bool isWallRight(int gridX, int gridY);
 
         bool isPacmanAlignedWithGrid(const Pacman &pacman);
+
     };
 
 } // namespace Logic

@@ -1,6 +1,7 @@
 // World.cpp
 
 #include "../../../Logic/models/World.hpp"
+#include "../../../Logic/utils/Observer.hpp"
 #include <map>
 #include <iostream>
 #include <cmath>
@@ -43,6 +44,13 @@ World::World(std::shared_ptr<EntityFactory> factory) : entityFactory(std::move(f
             }
         }
     }
+
+    // Add observer for keeping track of the score
+    eventSubject.attach(&scoreObserver);
+}
+
+int World::getScore() const {
+    return scoreObserver.getCurrentScore();
 }
 
 World::~World() {
@@ -149,6 +157,8 @@ void World::update(float deltaTime) {
 
     // Remove entities marked for deletion
     for (auto entityToRemove : entitiesToRemove) {
+        // Notify observers before removing the entity
+        eventSubject.notify(entityToRemove->getType());
         removeEntity(entityToRemove);
     }
 }
@@ -188,7 +198,7 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
         if (entity->getType() == EntityType::Wall) {
             Rectangle wallBounds = getEntityBounds(*entity);
             if (checkCollision(newBounds, wallBounds)) {
-                std::cout << "Collision detected with wall. Pacman's position will not be updated." << std::endl;
+                //std::cout << "Collision detected with wall. Pacman's position will not be updated." << std::endl;
                 // Collision detected, don't update Pacman's position
                 return;
 

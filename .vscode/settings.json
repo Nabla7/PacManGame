@@ -5,6 +5,7 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "memory": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "vector": "cpp"
     }
 }

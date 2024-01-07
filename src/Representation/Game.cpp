@@ -1,4 +1,7 @@
 // Representation/Game.cpp
+#include <iostream>
+#include <filesystem>
+
 
 #include "Game.hpp"
 #include "Camera.hpp"
@@ -12,17 +15,33 @@ Game::Game()
       inputHandler_(window_),
       world_(std::make_shared<Logic::PacmanGameEntityFactory>()),
       camera_(window_.getSize().x, window_.getSize().y),
-      view_(sf::FloatRect(-200.f, -50.f, 1200.f, 500.f)){
+      view_(sf::FloatRect(-200.f, -50.f, 1200.f, 500.f))
+      {
 
-    // Initialize world with the factory
-    // Create an EntityView for each Entity in the World
-    for (const auto& entity : world_.getEntities()) {
-        entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
-    }
+        // Initialize world with the factory
+        // Create an EntityView for each Entity in the World
+        for (const auto& entity : world_.getEntities()) {
+            entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
+        }
 
         window_.setView(view_);
 
-}
+            std::cout << "Current path is " << std::filesystem::current_path() << '\n';
+        try {
+          if (!font.loadFromFile("assets/font/Pixeboy.ttf")) {
+              throw std::runtime_error("Failed to load font from file");
+          } else {
+              std::cout << "Successfully loaded font from file" << std::endl;
+          }
+        } catch (const std::exception& e) {
+          std::cerr << "Exception: " << e.what() << std::endl;
+        }
+        scoreText.setFont(font);
+        scoreText.setCharacterSize(35); // Or any other suitable size
+        scoreText.setFillColor(sf::Color::White);
+        scoreText.setPosition(700, 0); // Top-left corner of the window
+ }
+
 
 void Game::render() {
     window_.clear();
@@ -30,6 +49,11 @@ void Game::render() {
     for (auto& entityView : entityViews_) {
         entityView.draw();
     }
+
+    // Update and draw score
+    scoreText.setString("Score: " + std::to_string(world_.getScore()));
+    window_.draw(scoreText);
+
     window_.display();
 }
 
@@ -38,21 +62,20 @@ Game::~Game() {
 }
 
 void Game::run() {
-    sf::Clock clock;
-    float timeSinceLastUpdate = 0.0f;
-    const float TimePerFrame = 1.f / 60.f; // 60 updates per second
+    utils::Stopwatch& stopwatch = utils::Stopwatch::getInstance();
+    stopwatch.start();
 
     while (window_.isOpen()) {
         processInput(); // Handle user input
 
         // Update game logic at a fixed time step
-        timeSinceLastUpdate += clock.restart().asSeconds();
-        while (timeSinceLastUpdate > TimePerFrame) {
-            timeSinceLastUpdate -= TimePerFrame;
-            update(TimePerFrame); // Update game state
+        while (stopwatch.getElapsedTime() > utils::Stopwatch::getMaxFrameTime()) {
+            update(utils::Stopwatch::getMaxFrameTime()); // Update game state
+            stopwatch.start(); // Restart the stopwatch
         }
 
         render(); // Render the frame
+        stopwatch.capFrameRate(); // Cap the frame rate
     }
 }
 
@@ -86,25 +109,18 @@ void Game::processInput() {
     }
 }
 
-    void Game::update(float deltaTime) {
-        // Update the world
-        world_.update(deltaTime);
-
-        // Clear existing entity views
-        entityViews_.clear();
-
-        // Recreate entity views for updated entities in the world
-        for (const auto& entity : world_.getEntities()) {
-            entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
-        }
-    }
-/*
 void Game::update(float deltaTime) {
     // Update the world
     world_.update(deltaTime);
-}
- */
 
+    // Clear existing entity views
+    entityViews_.clear();
+
+    // Recreate entity views for updated entities in the world
+    for (const auto& entity : world_.getEntities()) {
+        entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
+    }
+}
 
 
 } // namespace Representation

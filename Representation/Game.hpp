@@ -9,6 +9,7 @@
 #include "../Logic/models/World.hpp"
 #include "../Logic/factories/ConcreteEntityFactory.hpp"
 #include "Camera.hpp"
+#include "GameState.hpp"
 
 namespace Representation {
 
@@ -29,6 +30,9 @@ private:
     std::vector<EntityView> entityViews_;
     InputHandler inputHandler_;
     Camera camera_;
+    sf::Font font;
+    sf::Text scoreText;
+    StateManager stateManager_;
 
     void processInput();
     void update(float deltaTime);
