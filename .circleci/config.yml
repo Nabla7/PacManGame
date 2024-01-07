@@ -12,7 +12,7 @@ jobs:
             echo 'tzdata tzdata/Areas select Europe' | debconf-set-selections
             echo 'tzdata tzdata/Zones/Europe select Berlin' | debconf-set-selections
             apt-get update
-            apt-get install -y g++ cmake libsfml-dev libxrandr-dev libxcursor-dev libudev-dev libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
+            apt-get install -y git g++ cmake libsfml-dev libxrandr-dev libxcursor-dev libudev-dev libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
       - run:
           name: Configure
           command: mkdir build && cd build && cmake ..
@@ -21,7 +21,7 @@ jobs:
           command: cmake --build . --config Release
       - run:
           name: Test Executable
-          command: ./bin/PacManGame # Replace with your executable name
+          command: ./bin/PacManGame
 
 workflows:
   version: 2
