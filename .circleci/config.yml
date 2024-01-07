@@ -18,9 +18,9 @@ jobs:
             cd build
             cmake ..
             cmake --build .
-            name: Test Executable
-            command: ./build/PacManGame
-            when: always
+            cd ..
+            ./build/PacManGame
+          when: always
 
 workflows:
   version: 2
