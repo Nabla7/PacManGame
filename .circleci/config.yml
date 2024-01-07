@@ -20,9 +20,8 @@ jobs:
             cmake --build .
             pwd
             cd ..
-            pwd
+            cd build/bin/
             ls
-            ./build/bin/PacManGame
           when: always
 
 workflows:
