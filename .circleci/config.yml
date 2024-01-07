@@ -12,16 +12,15 @@ jobs:
             apt-get update
             apt-get install -y git g++ cmake libsfml-dev libxrandr-dev libxcursor-dev libudev-dev libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
       - run:
-          name: Configure and Build
+          name: Configure and Build and Test
           command: |
             mkdir build
             cd build
             cmake ..
             cmake --build .
-      - run:
-          name: Test Executable
-          command: ./build/PacManGame
-          when: always
+            name: Test Executable
+            command: ./build/PacManGame
+            when: always
 
 workflows:
   version: 2
