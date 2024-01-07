@@ -25,7 +25,6 @@ private:
     TimePoint start_time_;
     TimePoint end_time_;
     bool running_ = false;
-    // Other non-public members...
 };
 
 } // namespace utils
