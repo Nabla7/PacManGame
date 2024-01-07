@@ -9,19 +9,20 @@ jobs:
           name: Install Dependencies
           command: |
             export DEBIAN_FRONTEND=noninteractive
-            echo 'tzdata tzdata/Areas select Europe' | debconf-set-selections
-            echo 'tzdata tzdata/Zones/Europe select Berlin' | debconf-set-selections
             apt-get update
             apt-get install -y git g++ cmake libsfml-dev libxrandr-dev libxcursor-dev libudev-dev libfreetype-dev libopenal-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev
+      - run:
+          name: Clear CMake Cache
+          command: rm -rf build
       - run:
           name: Configure
           command: mkdir build && cd build && cmake ..
       - run:
           name: Build
-          command: cmake --build . --config Release
+          command: cmake --build .
       - run:
           name: Test Executable
-          command: ./bin/PacManGame
+          command: ./bin/MyGame # Replace with your executable name
 
 workflows:
   version: 2
