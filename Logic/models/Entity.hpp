@@ -33,7 +33,7 @@ public:
         Right
     } direction;
 
-    double speed = 0.25;
+    double speed = 1;
 
     // Pure virtual function for getting the type of the entity
     virtual EntityType getType() const = 0;
@@ -96,12 +96,18 @@ public:
     EntityType getType() const override { return EntityType::Fruit; }
 };
 
-class Ghost : public Entity {
-    bool isScared; // Whether the ghost is currently scared
+    class Ghost : public Entity {
+    public:
+        enum class State { Waiting, Chasing };
 
-public:
-    EntityType getType() const override { return EntityType::Ghost; }
-};
+        Ghost(double spawnTime = 0.0) : state(State::Waiting), spawnTimer(spawnTime), lockedDirection(Direction::Up) {}
+
+        EntityType getType() const override { return EntityType::Ghost; }
+
+        State state;
+        double spawnTimer;
+        Direction lockedDirection;
+    };
 
 class Wall : public Entity {
 public:

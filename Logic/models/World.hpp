@@ -33,24 +33,28 @@ namespace Logic {
 
         Pacman * getPacman() const;
 
+        void updateGhosts(double deltaTime);
+        void updateGhostPosition(Ghost& ghost, double deltaTime);
+        Entity::Direction chooseGhostDirection(const Ghost& ghost, const Pacman& pacman);
+        int getManhattanDistance(const Entity::Position& pos1, const Entity::Position& pos2) const;
+        std::vector<Entity::Direction> getViableDirections(const Ghost& ghost) const;
 
         int getScore() const;
 
     private:
         std::vector<std::unique_ptr<Entity>> entities;
+        std::vector<Ghost*> ghosts;
+        double elapsedTime = 0.0;
         EntityType map[height][width];
         std::shared_ptr<EntityFactory> entityFactory; // Factory member
         Subject eventSubject;    // Subject for observer pattern
         Score scoreObserver;     // Observer for scoring
 
+
         // Helper methods
         Rectangle getEntityBounds(const Entity& entity) const;
         void updatePacmanPosition(Pacman &pacman, double deltaTime);
         void checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove);
-        void updateGhostPosition(Ghost &ghost, double deltaTime);
-        void checkGhostCollisions(Ghost &ghost);
-
-        bool checkCollisionWithWalls(const Entity::Position &position);
     };
 
 } // namespace Logic

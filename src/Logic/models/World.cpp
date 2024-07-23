@@ -2,6 +2,7 @@
 
 #include "../../../Logic/models/World.hpp"
 #include "../../../Logic/utils/Observer.hpp"
+#include "utils/Random.hpp"
 #include <map>
 #include <iostream>
 #include <cmath>
@@ -135,7 +136,6 @@ void World::update(double deltaTime) {
             case EntityType::Ghost: {
                 auto ghost = static_cast<Ghost*>(entity.get());
                 updateGhostPosition(*ghost, deltaTime);
-                checkGhostCollisions(*ghost);
                 break;
             }
                 // Handle other entity types if necessary
@@ -216,14 +216,119 @@ void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entities
 }
 
 
-void World::updateGhostPosition(Ghost& ghost, double deltaTime) {
-    // Implement Ghost AI and movement logic
-    // Handle collisions with walls and adjust position
-}
+    void World::updateGhostPosition(Ghost& ghost, double deltaTime) {
+        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
+            ghost.state = Ghost::State::Chasing;
+        }
 
-void World::checkGhostCollisions(Ghost& ghost) {
-    // Check for collisions with Pacman and handle appropriately
-}
+        if (ghost.state == Ghost::State::Chasing) {
+            auto newPosition = ghost.position;
+            double moveDistance = ghost.speed * deltaTime * 5.0;
+
+            switch (ghost.lockedDirection) {
+                case Entity::Direction::Up:    newPosition.y -= moveDistance; break;
+                case Entity::Direction::Down:  newPosition.y += moveDistance; break;
+                case Entity::Direction::Left:  newPosition.x -= moveDistance; break;
+                case Entity::Direction::Right: newPosition.x += moveDistance; break;
+            }
+
+            Rectangle ghostRect = {newPosition.x, newPosition.y, ghost.getSize().first, ghost.getSize().second};
+
+            bool collision = false;
+            for (const auto& entity : entities) {
+                if (entity->getType() == EntityType::Wall) {
+                    Rectangle wallRect = getEntityBounds(*entity);
+                    if (checkCollision(ghostRect, wallRect)) {
+                        collision = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!collision) {
+                ghost.position = newPosition;
+            } else {
+                Pacman* pacman = getPacman();
+                if (pacman) {
+                    ghost.lockedDirection = chooseGhostDirection(ghost, *pacman);
+                }
+            }
+        }
+    }
+
+    Entity::Direction World::chooseGhostDirection(const Ghost& ghost, const Pacman& pacman) {
+        std::vector<Entity::Direction> viableDirections = getViableDirections(ghost);
+
+        if (viableDirections.empty()) {
+            return ghost.lockedDirection;
+        }
+
+        if (utils::Random::getInstance().getDouble(0, 1) < 0.5) {
+            return viableDirections[utils::Random::getInstance().getInt(0, viableDirections.size() - 1)];
+        }
+
+        int minDistance = std::numeric_limits<int>::max();
+        std::vector<Entity::Direction> bestDirections;
+
+        for (const auto& dir : viableDirections) {
+            Entity::Position newPos = ghost.position;
+            switch (dir) {
+                case Entity::Direction::Up:    newPos.y -= 1; break;
+                case Entity::Direction::Down:  newPos.y += 1; break;
+                case Entity::Direction::Left:  newPos.x -= 1; break;
+                case Entity::Direction::Right: newPos.x += 1; break;
+            }
+
+            int distance = getManhattanDistance(newPos, pacman.position);
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestDirections.clear();
+                bestDirections.push_back(dir);
+            } else if (distance == minDistance) {
+                bestDirections.push_back(dir);
+            }
+        }
+
+        return bestDirections[utils::Random::getInstance().getInt(0, bestDirections.size() - 1)];
+    }
+
+    int World::getManhattanDistance(const Entity::Position& pos1, const Entity::Position& pos2) const {
+        return std::abs(pos1.x - pos2.x) + std::abs(pos1.y - pos2.y);
+    }
+
+    std::vector<Entity::Direction> World::getViableDirections(const Ghost& ghost) const {
+        std::vector<Entity::Direction> viableDirections;
+        const double step = 0.1; // Small step to check for collisions
+
+        for (const auto& dir : {Entity::Direction::Up, Entity::Direction::Down, Entity::Direction::Left, Entity::Direction::Right}) {
+            Entity::Position newPos = ghost.position;
+            switch (dir) {
+                case Entity::Direction::Up:    newPos.y -= step; break;
+                case Entity::Direction::Down:  newPos.y += step; break;
+                case Entity::Direction::Left:  newPos.x -= step; break;
+                case Entity::Direction::Right: newPos.x += step; break;
+            }
+
+            Rectangle ghostRect = {newPos.x, newPos.y, ghost.getSize().first, ghost.getSize().second};
+            bool collision = false;
+
+            for (const auto& entity : entities) {
+                if (entity->getType() == EntityType::Wall) {
+                    Rectangle wallRect = getEntityBounds(*entity);
+                    if (checkCollision(ghostRect, wallRect)) {
+                        collision = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!collision) {
+                viableDirections.push_back(dir);
+            }
+        }
+
+        return viableDirections;
+    }
 
 Pacman * World::getPacman() const {
     for (auto& entity : entities) {
