@@ -50,7 +50,7 @@ public:
     }
 
     virtual std::pair<double, double> getSize() const {
-        return {1.0, 1.0};  // Return size in grid units
+        return {0.999, 0.999};  // Return size in grid units
     }
 
     static std::string DirectionToString(Direction direction) {
