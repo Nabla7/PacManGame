@@ -154,43 +154,45 @@ void World::update(double deltaTime) {
 
 
     void World::updatePacmanPosition(Pacman& pacman, double deltaTime) {
-        Entity::Direction direction = pacman.direction_;
+        Entity::Direction currentDirection = pacman.direction_;
         Entity::Direction desiredDirection = pacman.desiredDirection_;
         double speed = pacman.speed;
 
-        pacman.direction_ = pacman.desiredDirection_;
+        auto tryMove = [&](Entity::Direction dir) -> bool {
+            auto newPosition = pacman.position;
+            double moveDistance = speed * deltaTime * 5.0;
 
-        auto newPosition = pacman.position;
-        double moveDistance = speed * deltaTime * 5.0; // Increase movement speed
-        if (direction == Entity::Direction::Up) {
-            newPosition.y -= moveDistance;
-        } else if (direction == Entity::Direction::Down) {
-            newPosition.y += moveDistance;
-        } else if (direction == Entity::Direction::Left) {
-            newPosition.x -= moveDistance;
-        } else if (direction == Entity::Direction::Right) {
-            newPosition.x += moveDistance;
-        }
+            switch (dir) {
+                case Entity::Direction::Up:    newPosition.y -= moveDistance; break;
+                case Entity::Direction::Down:  newPosition.y += moveDistance; break;
+                case Entity::Direction::Left:  newPosition.x -= moveDistance; break;
+                case Entity::Direction::Right: newPosition.x += moveDistance; break;
+            }
 
-        // Create a rectangle for Pacman's new position
-        Rectangle pacmanRect = {newPosition.x, newPosition.y, pacman.getSize().first, pacman.getSize().second};
+            Rectangle pacmanRect = {newPosition.x, newPosition.y, pacman.getSize().first, pacman.getSize().second};
 
-        // Check for collisions with walls
-        bool collisionDetected = false;
-        for (const auto& entity : entities) {
-            if (entity->getType() == EntityType::Wall) {
-                Rectangle wallRect = getEntityBounds(*entity);
-                if (checkCollision(pacmanRect, wallRect)) {
-                    collisionDetected = true;
-                    break;
+            for (const auto& entity : entities) {
+                if (entity->getType() == EntityType::Wall) {
+                    Rectangle wallRect = getEntityBounds(*entity);
+                    if (checkCollision(pacmanRect, wallRect)) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        // Update Pacman's position if no collision was detected
-        if (!collisionDetected) {
             pacman.position = newPosition;
+            return true;
+        };
+
+        // First, try to move in the desired direction
+        if (tryMove(desiredDirection)) {
+            pacman.direction_ = desiredDirection;
         }
+            // If that fails and it's different from the current direction, try to move in the current direction
+        else if (desiredDirection != currentDirection && tryMove(currentDirection)) {
+            // Keep the current direction
+        }
+        // If both fail, Pacman stops (which is handled by not updating the position)
     }
 
 void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove) {
