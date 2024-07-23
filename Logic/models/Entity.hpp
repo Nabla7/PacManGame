@@ -41,11 +41,6 @@ public:
     // Get the position of the entity
     Position getPosition() const { return position; }
 
-    // Get the size of the entity (placeholder implementation)
-    virtual std::pair<double, double> getSize() const {
-        return {1.0, 1.0};  // Placeholder values
-    }
-
     virtual void move(Direction direction) {}
 
     Direction desiredDirection_;
@@ -54,6 +49,9 @@ public:
         desiredDirection_ = dir;
     }
 
+    virtual std::pair<double, double> getSize() const {
+        return {1.0, 1.0};  // Return size in grid units
+    }
 
     static std::string DirectionToString(Direction direction) {
         switch (direction) {

@@ -50,6 +50,7 @@ namespace Logic {
         void updateGhostPosition(Ghost &ghost, double deltaTime);
         void checkGhostCollisions(Ghost &ghost);
 
+        bool checkCollisionWithWalls(const Entity::Position &position);
     };
 
 } // namespace Logic
