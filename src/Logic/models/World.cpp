@@ -6,6 +6,9 @@
 #include <map>
 #include <iostream>
 #include <cmath>
+#include <queue>
+#include <cmath>
+#include <algorithm>
 
 namespace Logic {
 
@@ -215,7 +218,7 @@ void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entities
     }
 }
 
-
+/*
     void World::updateGhostPosition(Ghost& ghost, double deltaTime) {
         if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
             ghost.state = Ghost::State::Chasing;
@@ -255,6 +258,7 @@ void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entities
             }
         }
     }
+    */
 
     Entity::Direction World::chooseGhostDirection(const Ghost& ghost, const Pacman& pacman) {
         std::vector<Entity::Direction> viableDirections = getViableDirections(ghost);
@@ -298,7 +302,7 @@ void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entities
 
     std::vector<Entity::Direction> World::getViableDirections(const Ghost& ghost) const {
         std::vector<Entity::Direction> viableDirections;
-        const double step = 0.1; // Small step to check for collisions
+        const double step = 1; // Small step to check for collisions
 
         for (const auto& dir : {Entity::Direction::Up, Entity::Direction::Down, Entity::Direction::Left, Entity::Direction::Right}) {
             Entity::Position newPos = ghost.position;
@@ -338,5 +342,127 @@ Pacman * World::getPacman() const {
     }
     return nullptr; // Return nullptr if no Pacman found
 }
+
+
+
+//+++++++++++++++++++++ smart ghost stuff++++++++++++++++++++//
+    class Node {
+    public:
+        int x, y;
+        double g, h, f;
+        Node* parent;
+
+        Node(int x, int y) : x(x), y(y), g(0), h(0), f(0), parent(nullptr) {}
+    };
+
+    std::vector<Entity::Position> World::findPath(const Ghost& ghost, const Pacman& pacman) {
+        std::vector<std::vector<bool>> visited(height, std::vector<bool>(width, false));
+        std::vector<std::vector<Node>> nodes(height, std::vector<Node>(width, Node(0, 0)));
+
+        auto compare = [](const Node* a, const Node* b) { return a->f > b->f; };
+        std::priority_queue<Node*, std::vector<Node*>, decltype(compare)> openList(compare);
+
+        int startX = static_cast<int>(std::round(ghost.position.x));
+        int startY = static_cast<int>(std::round(ghost.position.y));
+        int goalX = static_cast<int>(std::round(pacman.position.x));
+        int goalY = static_cast<int>(std::round(pacman.position.y));
+
+        nodes[startY][startX] = Node(startX, startY);
+        openList.push(&nodes[startY][startX]);
+
+        while (!openList.empty()) {
+            Node* current = openList.top();
+            openList.pop();
+
+            if (current->x == goalX && current->y == goalY) {
+                return reconstructPath(current);
+            }
+
+            visited[current->y][current->x] = true;
+
+            for (const auto& dir : {Entity::Direction::Up, Entity::Direction::Down, Entity::Direction::Left, Entity::Direction::Right}) {
+                int newX = current->x;
+                int newY = current->y;
+
+                switch (dir) {
+                    case Entity::Direction::Up: newY--; break;
+                    case Entity::Direction::Down: newY++; break;
+                    case Entity::Direction::Left: newX--; break;
+                    case Entity::Direction::Right: newX++; break;
+                }
+
+                if (newX < 0 || newX >= width || newY < 0 || newY >= height || visited[newY][newX] || map[newY][newX] == EntityType::Wall) {
+                    continue;
+                }
+
+                double newG = current->g + 1.0;
+                double newH = std::abs(newX - goalX) + std::abs(newY - goalY);
+                double newF = newG + newH;
+
+                Node* neighbor = &nodes[newY][newX];
+                if (newG < neighbor->g || neighbor->g == 0) {
+                    neighbor->x = newX;
+                    neighbor->y = newY;
+                    neighbor->g = newG;
+                    neighbor->h = newH;
+                    neighbor->f = newF;
+                    neighbor->parent = current;
+                    openList.push(neighbor);
+                }
+            }
+        }
+
+        return {}; // No path found
+    }
+
+    std::vector<Entity::Position> World::reconstructPath(Node* goal) {
+        std::vector<Entity::Position> path;
+        Node* current = goal;
+        while (current != nullptr) {
+            path.push_back({static_cast<double>(current->x), static_cast<double>(current->y)});
+            current = current->parent;
+        }
+        std::reverse(path.begin(), path.end());
+        return path;
+    }
+
+    void World::updateGhostPosition(Ghost& ghost, double deltaTime) {
+        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
+            ghost.state = Ghost::State::Chasing;
+        }
+
+        if (ghost.state == Ghost::State::Chasing) {
+            Pacman* pacman = getPacman();
+            if (pacman) {
+                std::vector<Entity::Position> path = findPath(ghost, *pacman);
+                if (!path.empty() && path.size() > 1) {
+                    Entity::Position nextPos = path[1]; // Next position after current
+
+                    // Calculate direction vector
+                    double dx = nextPos.x - ghost.position.x;
+                    double dy = nextPos.y - ghost.position.y;
+                    double length = std::sqrt(dx*dx + dy*dy);
+
+                    if (length > 0) {
+                        // Normalize direction vector
+                        dx /= length;
+                        dy /= length;
+
+                        // Move ghost
+                        double moveDistance = ghost.speed * deltaTime * 5.0;
+                        ghost.position.x += dx * moveDistance;
+                        ghost.position.y += dy * moveDistance;
+
+                        // Update locked direction based on primary movement axis
+                        if (std::abs(dx) > std::abs(dy)) {
+                            ghost.lockedDirection = (dx > 0) ? Entity::Direction::Right : Entity::Direction::Left;
+                        } else {
+                            ghost.lockedDirection = (dy > 0) ? Entity::Direction::Down : Entity::Direction::Up;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 } // namespace Logic

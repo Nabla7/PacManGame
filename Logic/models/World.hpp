@@ -17,6 +17,7 @@ namespace Logic {
         double height;
     };
 
+
     class World {
     public:
         static constexpr int width = 20;
@@ -55,6 +56,19 @@ namespace Logic {
         Rectangle getEntityBounds(const Entity& entity) const;
         void updatePacmanPosition(Pacman &pacman, double deltaTime);
         void checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove);
+
+        class Node {
+        public:
+            int x, y;
+            double g, h, f;
+            Node* parent;
+
+            Node(int x, int y) : x(x), y(y), g(0), h(0), f(0), parent(nullptr) {}
+        };
+
+        std::vector<Entity::Position> reconstructPath(Node *goal);
+
+        std::vector<Entity::Position> findPath(const Ghost &ghost, const Pacman &pacman);
     };
 
 } // namespace Logic
