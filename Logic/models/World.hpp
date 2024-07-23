@@ -11,10 +11,10 @@
 namespace Logic {
 
     struct Rectangle {
-        float x;
-        float y;
-        float width;
-        float height;
+        double x;
+        double y;
+        double width;
+        double height;
     };
 
     class World {
@@ -28,7 +28,7 @@ namespace Logic {
         void addEntity(EntityType type, int x, int y);
         void removeEntity(Entity *entityToRemove);
         const std::vector<std::unique_ptr<Entity>>& getEntities() const;
-        void update(float deltaTime);
+        void update(double deltaTime);
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
 
         Pacman * getPacman() const;
@@ -45,20 +45,10 @@ namespace Logic {
 
         // Helper methods
         Rectangle getEntityBounds(const Entity& entity) const;
-        void updatePacmanPosition(Pacman &pacman, float deltaTime);
+        void updatePacmanPosition(Pacman &pacman, double deltaTime);
         void checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove);
-        void updateGhostPosition(Ghost &ghost, float deltaTime);
+        void updateGhostPosition(Ghost &ghost, double deltaTime);
         void checkGhostCollisions(Ghost &ghost);
-
-        bool isWallAbove(int gridX, int gridY);
-
-        bool isWallBelow(int gridX, int gridY);
-
-        bool isWallLeft(int gridX, int gridY);
-
-        bool isWallRight(int gridX, int gridY);
-
-        bool isPacmanAlignedWithGrid(const Pacman &pacman);
 
     };
 

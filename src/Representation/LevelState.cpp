@@ -34,7 +34,7 @@ namespace Representation {
         }
     }
 
-    void LevelState::update(Game& game, float deltaTime) {
+    void LevelState::update(Game& game, double deltaTime) {
         game.getWorld().update(deltaTime);
 
         // Add any additional update logic specific to LevelState

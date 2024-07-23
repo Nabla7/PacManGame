@@ -17,7 +17,7 @@ public:
 
     void draw();
 
-    std::pair<float, float> getProjectedPosition() const {
+    std::pair<double, double> getProjectedPosition() const {
         return camera_.projectPosition(entity_.getPosition().x, entity_.getPosition().y);
     }
 

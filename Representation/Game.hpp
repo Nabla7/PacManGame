@@ -41,7 +41,7 @@ namespace Representation {
         StateManager stateManager_; // StateManager instance
 
         void processInput();
-        void update(float deltaTime);
+        void update(double deltaTime);
         void render();
 
         std::string textureFilePath = "assets/images/Sprites.png";

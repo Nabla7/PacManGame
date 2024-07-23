@@ -22,8 +22,8 @@ public:
 
     // Common attributes for all entities
     struct Position {
-        float x;
-        float y;
+        double x;
+        double y;
     } position;
 
     enum class Direction {
@@ -33,7 +33,7 @@ public:
         Right
     } direction;
 
-    float speed = 0.25;
+    double speed = 0.25;
 
     // Pure virtual function for getting the type of the entity
     virtual EntityType getType() const = 0;
@@ -42,8 +42,8 @@ public:
     Position getPosition() const { return position; }
 
     // Get the size of the entity (placeholder implementation)
-    virtual std::pair<float, float> getSize() const {
-        return {1.0f, 1.0f};  // Placeholder values
+    virtual std::pair<double, double> getSize() const {
+        return {1.0, 1.0};  // Placeholder values
     }
 
     virtual void move(Direction direction) {}
@@ -77,7 +77,8 @@ public:
     void move(Direction direction) override {
         direction_ = direction;
         std::cout << "Pacman is now moving in direction: " << Entity::DirectionToString(direction) << std::endl;
-}
+    }
+
 };
 
 class Coin : public Entity {
@@ -88,9 +89,6 @@ public:
     int getValue() const { return value; }
 
     EntityType getType() const override { return EntityType::Coin; }
-    std::pair<float, float> getSize() const override {
-        return {1.0f, 1.0f};  // Size for coins
-    }
 };
 
 class Fruit : public Entity {
@@ -110,9 +108,6 @@ public:
 class Wall : public Entity {
 public:
     EntityType getType() const override { return EntityType::Wall; }
-    std::pair<float, float> getSize() const override {
-        return {1.0f, 1.0f};  // Size for walls
-    }
 };
 
 } // namespace Logic

@@ -21,7 +21,7 @@ void PausedState::handleInput(Game& game) {
     }
 }
 
-void PausedState::update(Game& game, float deltaTime) {
+void PausedState::update(Game& game, double deltaTime) {
     // In paused state, we might not need to update anything.
     // However, you can add logic here if needed.
 }

@@ -20,7 +20,7 @@ class State {
 public:
     virtual ~State() = default;
     virtual void handleInput(Game& game) = 0;
-    virtual void update(Game& game, float deltaTime) = 0;
+    virtual void update(Game& game, double deltaTime) = 0;
     virtual void render(Game& game) = 0;
 };
 
@@ -29,7 +29,7 @@ class MenuState : public State {
     // Implementation for MenuState
 public:
     void handleInput(Game& game) override;
-    void update(Game& game, float deltaTime) override;
+    void update(Game& game, double deltaTime) override;
     void render(Game& game) override;
 };
 
@@ -37,14 +37,21 @@ class LevelState : public State {
     // Implementation for LevelState
 public:
     void handleInput(Game& game) override;
-    void update(Game& game, float deltaTime) override;
+    void update(Game& game, double deltaTime) override;
     void render(Game& game) override;
 };
 
 class PausedState : public State {
 public:
     void handleInput(Game& game) override;
-    void update(Game& game, float deltaTime) override;
+    void update(Game& game, double deltaTime) override;
+    void render(Game& game) override;
+};
+
+class GameOverState : public State {
+public:
+    void handleInput(Game& game) override;
+    void update(Game& game, double deltaTime) override;
     void render(Game& game) override;
 };
 

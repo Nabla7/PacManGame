@@ -17,7 +17,7 @@ namespace Representation {
     }
     }
 
-    void MenuState::update(Game& game, float deltaTime) {
+    void MenuState::update(Game& game, double deltaTime) {
         // Update menu logic, like animations or menu selection effects.
     }
 

@@ -12,23 +12,23 @@ public:
     Camera(int screenWidth, int screenHeight)
         : screenWidth_(screenWidth), screenHeight_(screenHeight) {}
 
-    std::pair<float, float> projectPosition(float x, float y) const {
+    std::pair<double, double> projectPosition(double x, double y) const {
         // Assuming world's center is at (0,0) and dimensions are normalized [-1, 1]
-        float pixelX = (x + 1.0f) / 2.0f * screenWidth_ ; // Normalized X to [0, 1] then scale
-        float pixelY = (y + 1.0f) / 2.0f * screenHeight_; // Normalized Y to [0, 1] then scale
+        double pixelX = (x + 1.0f) / 2.0f * screenWidth_ ; // Normalized X to [0, 1] then scale
+        double pixelY = (y + 1.0f) / 2.0f * screenHeight_; // Normalized Y to [0, 1] then scale
         return {pixelX, pixelY};
     }
 
 
 
-    std::pair<float, float> projectSize(float width, float height) const {
+    std::pair<double, double> projectSize(double width, double height) const {
         // Calculate the aspect ratios
-        float worldAspectRatio = static_cast<float>(Logic::World::width) / static_cast<float>(Logic::World::height);
-        float screenAspectRatio = static_cast<float>(screenWidth_) / static_cast<float>(screenHeight_);
+        double worldAspectRatio = static_cast<double>(Logic::World::width) / static_cast<double>(Logic::World::height);
+        double screenAspectRatio = static_cast<double>(screenWidth_) / static_cast<double>(screenHeight_);
 
         // Adjust size based on aspect ratios
-        float adjustedWidth = width;
-        float adjustedHeight = height;
+        double adjustedWidth = width;
+        double adjustedHeight = height;
 
         if (screenAspectRatio > worldAspectRatio) {
             // Screen is wider than the world
@@ -38,8 +38,8 @@ public:
             adjustedWidth *= worldAspectRatio / screenAspectRatio;
         }
 
-        float pixelWidth = adjustedWidth * screenWidth_ / Logic::World::width;
-        float pixelHeight = adjustedHeight * screenHeight_ / Logic::World::height;
+        double pixelWidth = adjustedWidth * screenWidth_ / Logic::World::width;
+        double pixelHeight = adjustedHeight * screenHeight_ / Logic::World::height;
         return {pixelWidth, pixelHeight};
     }
 

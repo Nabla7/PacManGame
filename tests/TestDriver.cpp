@@ -23,8 +23,8 @@ int main() {
     testEntityPositions();
     std::cout << "\n========== Sprite Tests ==========\n";
     testSprites();
-    //std::cout << "\n========== World Add Entity Tests ==========\n";
-    //testWorldAddEntity();
+    std::cout << "\n========== World Add Entity Tests ==========\n";
+    testWorldAddEntity();
     std::cout << "\n========== Camera Project Position Tests ==========\n";
     testCameraProjectPosition();
     return 0;

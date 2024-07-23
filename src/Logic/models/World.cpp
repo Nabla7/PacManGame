@@ -80,8 +80,8 @@ void World::addEntity(EntityType type, int x, int y) {
                 return; // Do nothing for EntityType::Empty
         }
 
-        entity->position.x = (static_cast<float>(x) / static_cast<float>(width - 1)) * 2.0f - 1.0f;
-        entity->position.y = ((static_cast<float>(y) / static_cast<float>(height - 1)) * 2.0f - 1.0f);
+        entity->position.x = (static_cast<double >(x) / static_cast<double >(width - 1)) * 2.0f - 1.0f;
+        entity->position.y = ((static_cast<double >(y) / static_cast<double >(height - 1)) * 2.0f - 1.0f);
 
 
         entities.push_back(std::move(entity));
@@ -117,21 +117,21 @@ Rectangle World::getEntityBounds(const Entity& entity) const {
     Rectangle bounds;
 
     // Convert to normalized coordinates
-    float normWidth = 1.0f / width * 2.0f;
-    float normHeight = 1.0f / height * 2.0f;
+    double normWidth = entity.getSize().first / width * 2.0f;
+    double normHeight = entity.getSize().second / height * 2.0f;
 
     bounds.x = entity.position.x;
     bounds.y = entity.position.y;
 
-    bounds.width = normWidth*0.95;
-    bounds.height = normHeight*0.95;
+    bounds.width = normWidth;
+    bounds.height = normHeight;
 
     return bounds;
 }
 
 
 
-void World::update(float deltaTime) {
+void World::update(double deltaTime) {
     std::vector<Entity*> entitiesToRemove;
 
     // Update logic for all entities
@@ -164,11 +164,11 @@ void World::update(float deltaTime) {
 }
 
 
-void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
+void World::updatePacmanPosition(Pacman& pacman, double deltaTime) {
     // Get the current direction and speed of the Pacman
     Entity::Direction direction = pacman.direction_;
     Entity::Direction desiredDirection = pacman.desiredDirection_;
-    float speed = pacman.speed;
+    double speed = pacman.speed;
     
     pacman.direction_ = pacman.desiredDirection_;
 
@@ -190,8 +190,8 @@ void World::updatePacmanPosition(Pacman& pacman, float deltaTime) {
     Rectangle newBounds;
     newBounds.x = newPosition.x;
     newBounds.y = newPosition.y;
-    newBounds.width = (1.0f / width * 2.0f)*0.95;  // Scaling to normalized coordinates
-    newBounds.height = (1.0f / height * 2.0f)*0.95;
+    newBounds.width = (1.0f / width * 2.0f);  // Scaling to normalized coordinates
+    newBounds.height = (1.0f / height * 2.0f);
 
 
     // Check for a collision with a wall
@@ -233,7 +233,7 @@ void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entities
 }
 
 
-void World::updateGhostPosition(Ghost& ghost, float deltaTime) {
+void World::updateGhostPosition(Ghost& ghost, double deltaTime) {
     // Implement Ghost AI and movement logic
     // Handle collisions with walls and adjust position
 }

@@ -23,7 +23,7 @@ include_directories(${CMAKE_SOURCE_DIR}/Representation)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 # Define the main executable
-add_executable(PacManGame main.cpp ${SOURCES})
+add_executable(PacManGame main.cpp ${SOURCES} src/Representation/GameOverState.cpp)
 target_link_libraries(PacManGame PRIVATE sfml-graphics sfml-audio)
 target_compile_features(PacManGame PRIVATE cxx_std_17)
 
@@ -35,7 +35,7 @@ file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR}/bin)
 option(BUILD_TESTS "Build the tests" ON)
 if(BUILD_TESTS)
     enable_testing()
-    set(TEST_SOURCES "${CMAKE_SOURCE_DIR}/tests/TestDriver.cpp" ${SOURCES})
+    set(TEST_SOURCES "${CMAKE_SOURCE_DIR}/tests/TestDriver.cpp" ${SOURCES} src/Representation/GameOverState.cpp)
     add_executable(PacManGameTests ${TEST_SOURCES})
     target_link_libraries(PacManGameTests sfml-graphics sfml-audio)
 endif()
