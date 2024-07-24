@@ -138,7 +138,7 @@ void World::update(double deltaTime) {
             }
             case EntityType::Ghost: {
                 auto ghost = static_cast<Ghost*>(entity.get());
-                updateGhostPosition(*ghost, deltaTime);
+                updateGhostPosition(*ghost, deltaTime, 100);
                 break;
             }
                 // Handle other entity types if necessary
@@ -426,7 +426,7 @@ Pacman * World::getPacman() const {
         return path;
     }
 
-    void World::updateGhostPosition(Ghost& ghost, double deltaTime) {
+    void World::updateGhostPosition(Ghost& ghost, double deltaTime, int level) {
         if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
             ghost.state = Ghost::State::Chasing;
         }
@@ -434,6 +434,9 @@ Pacman * World::getPacman() const {
         if (ghost.state == Ghost::State::Chasing) {
             Pacman* pacman = getPacman();
             if (pacman) {
+                // Calculate difficulty factor using a sigmoid function
+                double difficulty = 1.0 / (1.0 + std::exp(-0.1 * (level - 50)));
+
                 std::vector<Entity::Position> path = findPath(ghost, *pacman);
                 if (!path.empty() && path.size() > 1) {
                     Entity::Position nextPos = path[1]; // Next position after current
@@ -448,8 +451,18 @@ Pacman * World::getPacman() const {
                         dx /= length;
                         dy /= length;
 
+                        // Adjust direction based on difficulty
+                        if (utils::Random::getInstance().getDouble(0, 1) > difficulty) {
+                            // Randomly adjust direction for lower difficulties
+                            dx += utils::Random::getInstance().getDouble(-0.5, 0.5) * (1 - difficulty);
+                            dy += utils::Random::getInstance().getDouble(-0.5, 0.5) * (1 - difficulty);
+                            length = std::sqrt(dx*dx + dy*dy);
+                            dx /= length;
+                            dy /= length;
+                        }
+
                         // Move ghost
-                        double moveDistance = ghost.speed * deltaTime * 5.0;
+                        double moveDistance = ghost.speed * deltaTime * 5.0 * (0.5 + 0.5 * difficulty);
                         ghost.position.x += dx * moveDistance;
                         ghost.position.y += dy * moveDistance;
 

@@ -34,8 +34,7 @@ namespace Logic {
 
         Pacman * getPacman() const;
 
-        void updateGhosts(double deltaTime);
-        void updateGhostPosition(Ghost& ghost, double deltaTime);
+        void updateGhostPosition(Ghost& ghost, double deltaTime, int level);
         Entity::Direction chooseGhostDirection(const Ghost& ghost, const Pacman& pacman);
         int getManhattanDistance(const Entity::Position& pos1, const Entity::Position& pos2) const;
         std::vector<Entity::Direction> getViableDirections(const Ghost& ghost) const;
