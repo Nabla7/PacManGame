@@ -17,7 +17,6 @@ namespace Logic {
         double height;
     };
 
-
     class World {
     public:
         static constexpr int width = 20;
@@ -32,9 +31,10 @@ namespace Logic {
         void update(double deltaTime);
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
 
-        Pacman * getPacman() const;
+        Pacman* getPacman() const;
 
-        void updateGhostPosition(Ghost& ghost, double deltaTime, int level);
+        void updateGhostPositionSimple(Ghost& ghost, double deltaTime);
+        void updateGhostPositionSmart(Ghost& ghost, double deltaTime, int level);
         Entity::Direction chooseGhostDirection(const Ghost& ghost, const Pacman& pacman);
         int getManhattanDistance(const Entity::Position& pos1, const Entity::Position& pos2) const;
         std::vector<Entity::Direction> getViableDirections(const Ghost& ghost) const;
@@ -49,7 +49,6 @@ namespace Logic {
         std::shared_ptr<EntityFactory> entityFactory; // Factory member
         Subject eventSubject;    // Subject for observer pattern
         Score scoreObserver;     // Observer for scoring
-
 
         // Helper methods
         Rectangle getEntityBounds(const Entity& entity) const;
@@ -66,7 +65,6 @@ namespace Logic {
         };
 
         std::vector<Entity::Position> reconstructPath(Node *goal);
-
         std::vector<Entity::Position> findPath(const Ghost &ghost, const Pacman &pacman);
     };
 

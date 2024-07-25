@@ -100,13 +100,14 @@ public:
     public:
         enum class State { Waiting, Chasing };
 
-        Ghost(double spawnTime = 0.0) : state(State::Waiting), spawnTimer(spawnTime), lockedDirection(Direction::Up) {}
+        Ghost(double spawnTime = 0.0) : state(State::Waiting), spawnTimer(spawnTime), lockedDirection(Direction::Up), useSmartMovement(true) {}
 
         EntityType getType() const override { return EntityType::Ghost; }
 
         State state;
         double spawnTimer;
         Direction lockedDirection;
+        bool useSmartMovement;
     };
 
 class Wall : public Entity {
