@@ -2,7 +2,7 @@
 #define WORLD_HPP
 
 #include "Entity.hpp"
-#include "../factories/EntityFactory.hpp" // Include the EntityFactory interface
+#include "../factories/EntityFactory.hpp"
 #include "../utils/Observer.hpp"
 #include <vector>
 #include <memory>
@@ -25,9 +25,9 @@ namespace Logic {
         World(std::shared_ptr<EntityFactory> factory); // Constructor with factory
         ~World();
 
-        void addEntity(EntityType type, int x, int y);
+        std::shared_ptr<Entity> addEntity(EntityType type, int x, int y);
         void removeEntity(Entity *entityToRemove);
-        const std::vector<std::unique_ptr<Entity>>& getEntities() const;
+        const std::vector<std::shared_ptr<Entity>>& getEntities() const;
         void update(double deltaTime);
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
 
@@ -41,8 +41,25 @@ namespace Logic {
 
         int getScore() const;
 
+
+        int getCurrentLevel() const { return currentLevel; }
+        void incrementLevel();
+        void resetLevel();
+        void prepareNextLevel();
+        bool allCoinsAndFruitsEaten() const;
+
+        int currentLevel = 1;
+        int totalCoins = 0;
+        int totalFruits = 0;
+        int eatenCoins = 0;
+        int eatenFruits = 0;
+
+        void attachObserver(IObserver* observer) {
+            eventSubject.attach(observer);
+        }
+
     private:
-        std::vector<std::unique_ptr<Entity>> entities;
+        std::vector<std::shared_ptr<Entity>> entities;
         std::vector<Ghost*> ghosts;
         double elapsedTime = 0.0;
         EntityType map[height][width];
@@ -66,6 +83,21 @@ namespace Logic {
 
         std::vector<Entity::Position> reconstructPath(Node *goal);
         std::vector<Entity::Position> findPath(const Ghost &ghost, const Pacman &pacman);
+
+
+
+        void resetEntities();
+
+        void respawnCoinsAndFruits();
+
+        double ghostSpeedMultiplier = 1.0;
+        double fearModeDuration = 10.0; // in seconds
+
+        void increaseGhostSpeed();
+        void decreaseFearModeDuration();
+        void resetGhostSpeed();
+        void resetFearModeDuration();
+
     };
 
 } // namespace Logic

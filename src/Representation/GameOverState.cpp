@@ -3,11 +3,8 @@
 
 namespace Representation {
 
-    void GameOverState::handleInput(Game& game) {
-        auto& inputHandler = game.getInputHandler();
-        auto action = inputHandler.handleInput();
-
-        if (action == Action::Quit) {
+    void GameOverState::handleInput(Game& game, Logic::GameAction action) {
+        if (action == Logic::GameAction::Quit) {
             game.getWindow().close();
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {

@@ -1,38 +1,32 @@
-// Representation/InputHandler.cpp
-#include "InputHandler.hpp"
-#include <iostream>
+// src/Representation/InputHandler.cpp
+#include "../Representation/InputHandler.hpp"
+#include <SFML/Graphics.hpp>
 
 namespace Representation {
 
-Action InputHandler::handleInput() {
-    sf::Event event;
-    while (window_.pollEvent(event)) {
-        if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-            //std::cout << "Escape key pressed or window closed. Quitting...\n";
-            return Action::Quit;
+    Logic::GameAction InputHandler::handleInput() {
+        sf::Event event;
+        while (window_.pollEvent(event)) {
+            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+                return Logic::GameAction::Quit;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
+                return Logic::GameAction::Pause;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+                return Logic::GameAction::MoveUp;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+                return Logic::GameAction::MoveDown;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+                return Logic::GameAction::MoveLeft;
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+                return Logic::GameAction::MoveRight;
+            }
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
-            //std::cout << "P key pressed. Pausing...\n";
-            return Action::Pause;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-            //std::cout << "W key pressed. Moving up...\n";
-            return Action::MoveUp;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-            //std::cout << "S key pressed. Moving down...\n";
-            return Action::MoveDown;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-            //std::cout << "A key pressed. Moving left...\n";
-            return Action::MoveLeft;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-            //std::cout << "D key pressed. Moving right...\n";
-            return Action::MoveRight;
-        }
+        return Logic::GameAction::None;
     }
-    return Action::None;
-}
 
 } // namespace Representation

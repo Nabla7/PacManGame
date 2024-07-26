@@ -3,16 +3,13 @@
 
 namespace Representation {
 
-void PausedState::handleInput(Game& game) {
-    auto& inputHandler = game.getInputHandler();
-    auto action = inputHandler.handleInput();
-
+void PausedState::handleInput(Game& game, Logic::GameAction action) {
     switch (action) {
-        case Action::Pause:
+        case Logic::GameAction::Pause:
             // Pop PausedState to resume game
             game.getStateManager().popState();
             break;
-        case Action::Quit:
+        case Logic::GameAction::Quit:
             // Close the game window
             game.getWindow().close();
             break;

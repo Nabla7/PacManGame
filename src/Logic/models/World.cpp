@@ -17,14 +17,14 @@ namespace Logic {
         int initialMap[height][width] = {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 3, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1},
-                {1, 2, 1, 1, 2, 1, 4, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
+                {1, 2, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
                 {1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
                 {1, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 2, 1, 1, 2, 1, 2, 1},
-                {1, 0, 5, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 1},
+                {1, 0, 5, 2, 2, 2, 2, 1, 4, 4, 4, 4, 1, 2, 2, 2, 2, 2, 2, 1},
                 {1, 0, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 1},
                 {1, 0, 1, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
                 {1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
-                {1, 0, 0, 0, 4, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 2, 2, 2, 3, 1},
+                {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 2, 2, 2, 3, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
         };
 
@@ -38,13 +38,29 @@ namespace Logic {
                 {5, EntityType::Pacman}
         };
 
+        totalCoins = 0;
+        totalFruits = 0;
+        eatenCoins = 0;
+        eatenFruits = 0;
+
         // Copy the initial map to the world's map
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 EntityType type = entityTypeMap[initialMap[y][x]];
                 map[y][x] = type;
                 if (type != EntityType::Empty) {
-                    addEntity(type, x, y);
+                    auto entityPtr = addEntity(type, x, y);
+                    if (entityPtr) {
+                        if (type == EntityType::Coin) {
+                            totalCoins++;
+                        } else if (type == EntityType::Fruit) {
+                            totalFruits++;
+                        } else if (type == EntityType::Pacman) {
+                            if (auto pacman = dynamic_cast<Pacman*>(entityPtr.get())) {
+                                pacman->setLives(3); // Set initial lives for Pacman
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -53,17 +69,17 @@ namespace Logic {
         eventSubject.attach(&scoreObserver);
     }
 
-    int World::getScore() const {
-        return scoreObserver.getCurrentScore();
-    }
-
     World::~World() {
         // Unique pointers in entities vector will automatically deallocate memory
     }
 
-    void World::addEntity(EntityType type, int x, int y) {
+    int World::getScore() const {
+        return scoreObserver.getCurrentScore();
+    }
+
+    std::shared_ptr<Entity> World::addEntity(EntityType type, int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
-            std::unique_ptr<Entity> entity;
+            std::shared_ptr<Entity> entity;
             switch (type) {
                 case EntityType::Coin:
                     entity = entityFactory->createCoin();
@@ -81,28 +97,29 @@ namespace Logic {
                     entity = entityFactory->createPacman();
                     break;
                 default:
-                    return; // Do nothing for EntityType::Empty
+                    return nullptr; // Do nothing for EntityType::Empty
             }
 
-            // Set the position directly without normalization
+            // Set the position
             entity->position.x = static_cast<double>(x);
             entity->position.y = static_cast<double>(y);
 
-            entities.push_back(std::move(entity));
+            entities.push_back(entity);
             map[y][x] = type;
+            return entity;
         }
+        return nullptr;
     }
 
     void World::removeEntity(Entity* entityToRemove) {
-        // Find and remove the entity from the vector
         auto it = std::remove_if(entities.begin(), entities.end(),
-                                 [entityToRemove](const std::unique_ptr<Entity>& entity) {
+                                 [entityToRemove](const std::shared_ptr<Entity>& entity) {
                                      return entity.get() == entityToRemove;
                                  });
         entities.erase(it, entities.end());
     }
 
-    const std::vector<std::unique_ptr<Entity>>& World::getEntities() const {
+    const std::vector<std::shared_ptr<Entity>>& World::getEntities() const {
         return entities;
     }
 
@@ -136,10 +153,16 @@ namespace Logic {
                 }
                 case EntityType::Ghost: {
                     auto ghost = static_cast<Ghost*>(entity.get());
-                    if (ghost->useSmartMovement) {
-                        updateGhostPositionSmart(*ghost, deltaTime, 100);
-                    } else {
-                        updateGhostPositionSimple(*ghost, deltaTime);
+                    ghost->elapsedTime += deltaTime;
+                    if (ghost->state == Ghost::State::Waiting && ghost->elapsedTime >= ghost->spawnDelay) {
+                        ghost->state = Ghost::State::Chasing;
+                    }
+                    if (ghost->state == Ghost::State::Chasing) {
+                        if (ghost->useSmartMovement) {
+                            updateGhostPositionSmart(*ghost, deltaTime, currentLevel);
+                        } else {
+                            updateGhostPositionSimple(*ghost, deltaTime);
+                        }
                     }
                     break;
                 }
@@ -155,6 +178,15 @@ namespace Logic {
             eventSubject.notify(entityToRemove->getType());
             removeEntity(entityToRemove);
         }
+
+
+        if (allCoinsAndFruitsEaten()) {
+            incrementLevel();
+            resetEntities();
+            respawnCoinsAndFruits();
+        }
+
+        eventSubject.notify(EntityType::Empty); // Using Empty as a general update signal
     }
 
     void World::updatePacmanPosition(Pacman& pacman, double deltaTime) {
@@ -203,24 +235,28 @@ namespace Logic {
         Rectangle pacmanBounds = getEntityBounds(pacman);
 
         for (auto& entity : entities) {
-            if (entity->getType() == EntityType::Coin) {
-                Rectangle coinBounds = getEntityBounds(*entity);
-                if (checkCollision(pacmanBounds, coinBounds)) {
-                    // Collision with a coin detected
+            if (entity->getType() == EntityType::Coin || entity->getType() == EntityType::Fruit) {
+                Rectangle itemBounds = getEntityBounds(*entity);
+                if (checkCollision(pacmanBounds, itemBounds)) {
                     entitiesToRemove.push_back(entity.get());
-                }
-            } else if (entity->getType() == EntityType::Fruit) {
-                Rectangle fruitBounds = getEntityBounds(*entity);
-                if (checkCollision(pacmanBounds, fruitBounds)) {
-                    // Collision with a fruit detected
-                    entitiesToRemove.push_back(entity.get());
+
+                    if (entity->getType() == EntityType::Coin) {
+                        eatenCoins++;
+                        std::cout << "Coin eaten. Total eaten: " << eatenCoins << "/" << totalCoins << std::endl;
+                    } else if (entity->getType() == EntityType::Fruit) {
+                        eatenFruits++;
+                        std::cout << "Fruit eaten. Total eaten: " << eatenFruits << "/" << totalFruits << std::endl;
+                    }
+
+                    // Notify observers (for scoring)
+                    eventSubject.notify(entity->getType());
                 }
             }
         }
     }
 
     void World::updateGhostPositionSimple(Ghost& ghost, double deltaTime) {
-        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
+        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnDelay) {
             ghost.state = Ghost::State::Chasing;
         }
 
@@ -414,7 +450,7 @@ namespace Logic {
     }
 
     void World::updateGhostPositionSmart(Ghost& ghost, double deltaTime, int level) {
-        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
+        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnDelay) {
             ghost.state = Ghost::State::Chasing;
         }
 
@@ -463,6 +499,88 @@ namespace Logic {
                 }
             }
         }
+    }
+
+    void World::incrementLevel() {
+        currentLevel++;
+        // Increase difficulty here
+        increaseGhostSpeed();
+        decreaseFearModeDuration();
+    }
+
+    void World::resetLevel() {
+        currentLevel = 1;
+        // Reset difficulty here
+        resetGhostSpeed();
+        resetFearModeDuration();
+    }
+
+    bool World::allCoinsAndFruitsEaten() const {
+        return eatenCoins == totalCoins && eatenFruits == totalFruits;
+    }
+
+    void World::increaseGhostSpeed() {
+        ghostSpeedMultiplier *= 1.1; // Increase speed by 10% each level
+    }
+
+    void World::decreaseFearModeDuration() {
+        fearModeDuration *= 0.9; // Decrease duration by 10% each level
+    }
+
+    void World::resetGhostSpeed() {
+        ghostSpeedMultiplier = 1.0;
+    }
+
+    void World::resetFearModeDuration() {
+        fearModeDuration = 10.0;
+    }
+
+    void World::prepareNextLevel() {
+        resetEntities();
+        respawnCoinsAndFruits();
+    }
+
+    void World::resetEntities() {
+        // Implement the logic to reset entities to their starting positions
+        for (auto& entity : entities) {
+            if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
+                // Reset ghost to starting position
+                removeEntity(entity.get());
+
+                auto ghost1 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 9, 5));
+                if (ghost1) ghost1->spawnDelay = 0.0;  // First ghost starts immediately
+
+                auto ghost2 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 10, 5));
+                if (ghost2) ghost2->spawnDelay = 0.0;  // Second ghost also starts immediately
+
+                auto ghost3 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 11, 5));
+                if (ghost3) ghost3->spawnDelay = 5.0;  // Third ghost starts after 5 seconds
+
+                auto ghost4 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 12, 5));
+                if (ghost4) ghost4->spawnDelay = 10.0;  // Fourth ghost starts after 10 seconds
+            }
+            else if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
+                // Reset Pacman to starting position
+                pacman->position = {6, 1};
+            }
+        }
+    }
+
+    void World::respawnCoinsAndFruits() {
+        // Implement the logic to respawn coins and fruits
+        // For example:
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (map[y][x] == EntityType::Coin) {
+                    addEntity(EntityType::Coin, x, y);
+                }
+                else if (map[y][x] == EntityType::Fruit) {
+                    addEntity(EntityType::Fruit, x, y);
+                }
+            }
+        }
+        eatenCoins = 0;
+        eatenFruits = 0;
     }
 
 } // namespace Logic

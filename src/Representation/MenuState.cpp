@@ -1,20 +1,17 @@
 #include "GameState.hpp"
 #include "Game.hpp"
+#include "WorldView.hpp"
 
 namespace Representation {
 
-    void MenuState::handleInput(Game& game) {
-        // Handle menu input. For example, start the game or exit.
-        auto& inputHandler = game.getInputHandler();
-        auto action = inputHandler.handleInput();
-
-        if (action == Action::Quit) {
+    void MenuState::handleInput(Game& game, Logic::GameAction action) {
+        if (action == Logic::GameAction::Quit) {
             game.getWindow().close();
         }
-        
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
-            game.getStateManager().pushState(std::make_unique<LevelState>());
-    }
+            game.getStateManager().pushState(std::make_unique<LevelState>(game));
+        }
     }
 
     void MenuState::update(Game& game, double deltaTime) {
@@ -26,15 +23,15 @@ namespace Representation {
 
         sf::Text menuText;
         sf::Font font;
-        if (font.loadFromFile("assets/font/Pixeboy.ttf")) { // Load a font
+        if (font.loadFromFile("assets/font/Pixeboy.ttf")) {
             menuText.setFont(font);
             menuText.setString("Press Enter to Start");
-            menuText.setCharacterSize(24); // Set character size
+            menuText.setCharacterSize(24);
             menuText.setFillColor(sf::Color::White);
-            menuText.setPosition(window.getSize().x / 2, window.getSize().y / 2); // Center the text
+            menuText.setPosition(window.getSize().x / 2, window.getSize().y / 2);
             window.draw(menuText);
+        }
     }
-}
 
 
 } // namespace Representation

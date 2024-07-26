@@ -96,18 +96,33 @@ public:
     EntityType getType() const override { return EntityType::Fruit; }
 };
 
+// In Logic/models/Entity.hpp
+
     class Ghost : public Entity {
     public:
         enum class State { Waiting, Chasing };
 
-        Ghost(double spawnTime = 0.0) : state(State::Waiting), spawnTimer(spawnTime), lockedDirection(Direction::Up), useSmartMovement(true) {}
+        Ghost(double spawnDelay = 0.0)
+                : state(State::Waiting),
+                  spawnDelay(spawnDelay),
+                  lockedDirection(Direction::Up),
+                  useSmartMovement(true),
+                  elapsedTime(0.0)  // Track elapsed time since creation
+        {}
 
         EntityType getType() const override { return EntityType::Ghost; }
 
         State state;
-        double spawnTimer;
+        double spawnDelay;
         Direction lockedDirection;
         bool useSmartMovement;
+        double elapsedTime;  // Elapsed time since ghost creation
+
+        void setSpeedMultiplier(double multiplier) { speedMultiplier = multiplier; }
+        double getSpeed() const { return speed * speedMultiplier; }
+
+    private:
+        double speedMultiplier = 1.0;
     };
 
 class Wall : public Entity {
