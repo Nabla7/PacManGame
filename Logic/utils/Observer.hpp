@@ -14,21 +14,30 @@ public:
     virtual void onNotify(EntityType entityType) = 0;
 };
 
-class Subject {
-public:
-    void attach(IObserver* observer) {
-        observers.push_back(observer);
-    }
-
-    void notify(EntityType entityType) {
-        for (IObserver* observer : observers) {
-            observer->onNotify(entityType);
+    class Subject {
+    public:
+        void attach(const std::shared_ptr<IObserver>& observer) {
+            observers.push_back(observer);
         }
-    }
 
-private:
-    std::vector<IObserver*> observers;
-};
+        void notify(EntityType entityType) {
+            observers.erase(
+                    std::remove_if(observers.begin(), observers.end(),
+                                   [](const std::weak_ptr<IObserver>& weakObs) {
+                                       return weakObs.expired();
+                                   }),
+                    observers.end());
+
+            for (auto& weakObs : observers) {
+                if (auto observer = weakObs.lock()) {
+                    observer->onNotify(entityType);
+                }
+            }
+        }
+
+    private:
+        std::vector<std::weak_ptr<IObserver>> observers;
+    };
 
 
 

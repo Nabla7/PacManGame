@@ -6,10 +6,11 @@
 #include "../Logic/models/World.hpp"
 #include "Camera.hpp"
 #include "EntityView.hpp"
+#include <memory>
 
 namespace Representation {
 
-    class WorldView : public Logic::IObserver {
+    class WorldView : public Logic::IObserver, public std::enable_shared_from_this<WorldView> {
     public:
         WorldView(sf::RenderWindow& window, Logic::World& world, Camera& camera, const std::string& textureFilePath);
         void draw();
@@ -17,6 +18,10 @@ namespace Representation {
 
         void onNotify(Logic::EntityType entityType) override {
             update();
+        }
+
+        void attachToWorld() {
+            world_.attachObserver(shared_from_this());
         }
 
     private:

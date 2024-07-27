@@ -7,7 +7,6 @@ namespace Representation {
     WorldView::WorldView(sf::RenderWindow& window, Logic::World& world, Camera& camera, const std::string& textureFilePath)
             : window_(window), world_(world), camera_(camera), textureFilePath_(textureFilePath)
     {
-        world_.attachObserver(this);
         update();
     }
 

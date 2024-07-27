@@ -66,7 +66,8 @@ namespace Logic {
         }
 
         // Add observer for keeping track of the score
-        eventSubject.attach(&scoreObserver);
+        scoreObserver = std::make_shared<Score>();
+        eventSubject.attach(scoreObserver);
     }
 
     World::~World() {
@@ -619,11 +620,11 @@ namespace Logic {
     }
 
     int World::getScore() const {
-        return scoreObserver.getCurrentScore();
+        return scoreObserver->getCurrentScore();
     }
 
     void World::updateScore(double deltaTime) {
-        scoreObserver.update(deltaTime);
+        scoreObserver->update(deltaTime);
     }
 
 } // namespace Logic

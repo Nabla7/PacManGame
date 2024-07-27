@@ -59,7 +59,7 @@ namespace Logic {
         int eatenCoins = 0;
         int eatenFruits = 0;
 
-        void attachObserver(IObserver* observer) {
+        void attachObserver(const std::shared_ptr<IObserver>& observer) {
             eventSubject.attach(observer);
         }
 
@@ -70,7 +70,7 @@ namespace Logic {
         EntityType map[height][width];
         std::shared_ptr<EntityFactory> entityFactory; // Factory member
         Subject eventSubject;    // Subject for observer pattern
-        Score scoreObserver;     // Observer for scoring
+        std::shared_ptr<Score> scoreObserver;
 
         // Helper methods
         Rectangle getEntityBounds(const Entity& entity) const;
