@@ -19,36 +19,29 @@ FetchContent_MakeAvailable(SFML)
 include_directories(${CMAKE_SOURCE_DIR}/Logic)
 include_directories(${CMAKE_SOURCE_DIR}/Representation)
 
-# Collect all source files recursively
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# Create the Logic library
+file(GLOB_RECURSE LOGIC_SOURCES "src/Logic/*.cpp")
+add_library(LogicLib STATIC ${LOGIC_SOURCES})
+target_include_directories(LogicLib PUBLIC ${CMAKE_SOURCE_DIR}/Logic)
+
+# Collect Representation source files
+file(GLOB_RECURSE REPRESENTATION_SOURCES "src/Representation/*.cpp")
 
 # Define the main executable
-add_executable(PacManGame main.cpp ${SOURCES} src/Representation/GameOverState.cpp)
-target_link_libraries(PacManGame PRIVATE sfml-graphics sfml-audio)
+add_executable(PacManGame main.cpp ${REPRESENTATION_SOURCES})
+target_link_libraries(PacManGame PRIVATE LogicLib sfml-graphics sfml-audio)
 target_compile_features(PacManGame PRIVATE cxx_std_17)
 
 # Copy the assets to the build directory
 file(COPY ${CMAKE_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
-
 # If tests are enabled, add them
 option(BUILD_TESTS "Build the tests" ON)
 if(BUILD_TESTS)
     enable_testing()
-    set(TEST_SOURCES "${CMAKE_SOURCE_DIR}/tests/TestDriver.cpp" ${SOURCES} src/Representation/GameOverState.cpp)
+    set(TEST_SOURCES "${CMAKE_SOURCE_DIR}/tests/TestDriver.cpp" ${REPRESENTATION_SOURCES})
     add_executable(PacManGameTests ${TEST_SOURCES})
-    target_link_libraries(PacManGameTests sfml-graphics sfml-audio)
-endif()
-
-# Windows specific copy command
-if(WIN32)
-    add_custom_command(
-            TARGET PacManGame
-            COMMENT "Copy OpenAL DLL"
-            PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:PacManGame>
-            VERBATIM)
+    target_link_libraries(PacManGameTests PRIVATE LogicLib sfml-graphics sfml-audio)
 endif()
 
 install(TARGETS PacManGame)
-
-

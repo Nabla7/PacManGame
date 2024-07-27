@@ -46,6 +46,21 @@ Game::Game()
         scoreText.setPosition(700, 0); // Top-left corner of the window
  }
 
+    void Game::resetGame() {
+        // Reset the world
+        world_ = Logic::World(std::make_shared<Logic::PacmanGameEntityFactory>());
+
+        // Clear and recreate entity views
+        entityViews_.clear();
+        for (const auto& entity : world_.getEntities()) {
+            entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
+        }
+
+        // Reset other game states if necessary
+        // For example, reset the score
+        // scoreText.setString("Score: 0");
+    }
+
 
 void Game::render() {
     window_.clear();

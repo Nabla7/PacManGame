@@ -8,12 +8,16 @@ namespace Representation {
             game.getWindow().close();
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
-            game.getStateManager().pushState(std::make_unique<MenuState>());
+            shouldTransitionToMenu = true;
         }
     }
 
     void GameOverState::update(Game& game, double deltaTime) {
-        // Update logic for GameOverState if necessary
+        if (shouldTransitionToMenu) {
+            game.resetGame();
+            game.getStateManager().popState(); // Remove GameOverState
+            game.getStateManager().pushState(std::make_unique<MenuState>());
+        }
     }
 
     void GameOverState::render(Game& game) {
@@ -21,12 +25,12 @@ namespace Representation {
 
         sf::Text gameOverText;
         sf::Font font;
-        if (font.loadFromFile("assets/font/Pixeboy.ttf")) { // Load a font
+        if (font.loadFromFile("assets/font/Pixeboy.ttf")) {
             gameOverText.setFont(font);
             gameOverText.setString("Game Over! Press Enter to return to menu");
-            gameOverText.setCharacterSize(24); // Set character size
+            gameOverText.setCharacterSize(24);
             gameOverText.setFillColor(sf::Color::White);
-            gameOverText.setPosition(window.getSize().x / 2, window.getSize().y / 2); // Center the text
+            gameOverText.setPosition(window.getSize().x / 2, window.getSize().y / 2);
             window.draw(gameOverText);
         }
     }

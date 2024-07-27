@@ -23,6 +23,7 @@ namespace Representation {
         // Controller interface implementation
         void update(double deltaTime) override;
         void handleInput(Logic::GameAction action) override;
+        void resetGame();
         Logic::World& getWorld() override { return world_; }
 
         // Accessor methods

@@ -55,9 +55,12 @@ public:
 
 class GameOverState : public State {
 public:
+    GameOverState() : shouldTransitionToMenu(false) {}
     void handleInput(Game& game, Logic::GameAction action) override;
     void update(Game& game, double deltaTime) override;
     void render(Game& game) override;
+private:
+    bool shouldTransitionToMenu;
 };
 
 

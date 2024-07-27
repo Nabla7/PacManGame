@@ -25,13 +25,16 @@ namespace Logic {
         World(std::shared_ptr<EntityFactory> factory); // Constructor with factory
         ~World();
 
+        void update(double deltaTime);
+
         std::shared_ptr<Entity> addEntity(EntityType type, int x, int y);
         void removeEntity(Entity *entityToRemove);
         const std::vector<std::shared_ptr<Entity>>& getEntities() const;
-        void update(double deltaTime);
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
 
+
         Pacman* getPacman() const;
+
 
         void updateGhostPositionSimple(Ghost& ghost, double deltaTime);
         void updateGhostPositionSmart(Ghost& ghost, double deltaTime, int level);
@@ -39,7 +42,9 @@ namespace Logic {
         int getManhattanDistance(const Entity::Position& pos1, const Entity::Position& pos2) const;
         std::vector<Entity::Direction> getViableDirections(const Ghost& ghost) const;
 
+
         int getScore() const;
+        void updateScore(double deltaTime);
 
 
         int getCurrentLevel() const { return currentLevel; }

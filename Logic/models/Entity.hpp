@@ -121,6 +121,25 @@ public:
         void setSpeedMultiplier(double multiplier) { speedMultiplier = multiplier; }
         double getSpeed() const { return speed * speedMultiplier; }
 
+        bool isVulnerable;
+        double vulnerabilityTimer;
+
+        void makeVulnerable(double duration) {
+            isVulnerable = true;
+            vulnerabilityTimer = duration;
+            setSpeedMultiplier(0.66);  // Slow down when vulnerable
+        }
+
+        void update(double deltaTime) {
+            if (isVulnerable) {
+                vulnerabilityTimer -= deltaTime;
+                if (vulnerabilityTimer <= 0) {
+                    isVulnerable = false;
+                    setSpeedMultiplier(1.0);  // Return to normal speed
+                }
+            }
+        }
+
     private:
         double speedMultiplier = 1.0;
     };

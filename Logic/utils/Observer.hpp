@@ -4,6 +4,7 @@
 
 #include "../models/Entity.hpp"
 #include <vector>
+#include <cmath>
 
 namespace Logic {
 
@@ -29,27 +30,47 @@ private:
     std::vector<IObserver*> observers;
 };
 
-class Score : public IObserver {
-public:
-    Score() : currentScore(0) {}
 
-    void onNotify(EntityType entityType) override {
-        if (entityType == EntityType::Coin) {
-            currentScore += coinScore;
-            std::cout << "Score added: " << coinScore << ". Current score: " << currentScore << std::endl;
+
+    class Score : public IObserver {
+    public:
+        Score() : currentScore(0), timeSinceLastCoin(0), baseScorePerCoin(10), maxScorePerCoin(50), scoreDecayRate(1) {}
+
+        void onNotify(EntityType entityType) override {
+            if (entityType == EntityType::Coin) {
+                int scoreForCoin = getScoreForCoin();
+                currentScore += scoreForCoin;
+                std::cout << "Score added: " << scoreForCoin << ". Current score: " << currentScore << std::endl;
+            } else if (entityType == EntityType::Fruit) {
+                currentScore += 100;
+                std::cout << "Fruit eaten. Score: " << currentScore << std::endl;
+            } else if (entityType == EntityType::Ghost) {
+                currentScore += 200;
+                std::cout << "Ghost eaten. Score: " << currentScore << std::endl;
+            }
         }
-        // Add other conditions for different score updates
-    }
 
-    int getCurrentScore() const { return currentScore; }
+        void update(double deltaTime) {
+            currentScore = std::max(0, currentScore - static_cast<int>(scoreDecayRate * deltaTime));
+            timeSinceLastCoin += deltaTime;
+        }
 
-    // Other methods for high scores, saving/loading scores, etc.
+        int getCurrentScore() const { return currentScore; }
 
-private:
-    int currentScore;
-    const int coinScore = 10; // Score value per coin
-    // Add other score values for different entities
-};
+    private:
+        int currentScore;
+        double timeSinceLastCoin;
+        int baseScorePerCoin;
+        int maxScorePerCoin;
+        double scoreDecayRate;
+
+        int getScoreForCoin() {
+            double factor = std::exp(-timeSinceLastCoin / 2.0);
+            int score = baseScorePerCoin + static_cast<int>((maxScorePerCoin - baseScorePerCoin) * factor);
+            timeSinceLastCoin = 0;
+            return score;
+        }
+    };
 
 } // namespace Logic
 

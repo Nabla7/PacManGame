@@ -73,8 +73,56 @@ namespace Logic {
         // Unique pointers in entities vector will automatically deallocate memory
     }
 
-    int World::getScore() const {
-        return scoreObserver.getCurrentScore();
+    void World::update(double deltaTime) {
+        std::vector<Entity*> entitiesToRemove;
+
+        // Update logic for all entities
+        for (auto& entity : entities) {
+            switch (entity->getType()) {
+                case EntityType::Pacman: {
+                    auto pacman = static_cast<Pacman*>(entity.get());
+                    updatePacmanPosition(*pacman, deltaTime);
+                    checkPacmanCollisions(*pacman, entitiesToRemove);
+                    break;
+                }
+                case EntityType::Ghost: {
+                    auto ghost = static_cast<Ghost*>(entity.get());
+                    ghost->elapsedTime += deltaTime;
+                    if (ghost->state == Ghost::State::Waiting && ghost->elapsedTime >= ghost->spawnDelay) {
+                        ghost->state = Ghost::State::Chasing;
+                    }
+                    if (ghost->state == Ghost::State::Chasing) {
+                        if (ghost->useSmartMovement) {
+                            updateGhostPositionSmart(*ghost, deltaTime, currentLevel);
+                        } else {
+                            updateGhostPositionSimple(*ghost, deltaTime);
+                        }
+                    }
+                    break;
+                }
+                    // Handle other entity types if necessary
+                default:
+                    break;
+            }
+        }
+
+
+
+        // Remove entities marked for deletion
+        for (auto entityToRemove : entitiesToRemove) {
+            // Notify observers before removing the entity
+            eventSubject.notify(entityToRemove->getType());
+            removeEntity(entityToRemove);
+        }
+
+
+        if (allCoinsAndFruitsEaten()) {
+            incrementLevel();
+            resetEntities();
+            respawnCoinsAndFruits();
+        }
+
+        eventSubject.notify(EntityType::Empty); // Using Empty as a general update signal
     }
 
     std::shared_ptr<Entity> World::addEntity(EntityType type, int x, int y) {
@@ -139,56 +187,6 @@ namespace Logic {
         return bounds;
     }
 
-    void World::update(double deltaTime) {
-        std::vector<Entity*> entitiesToRemove;
-
-        // Update logic for all entities
-        for (auto& entity : entities) {
-            switch (entity->getType()) {
-                case EntityType::Pacman: {
-                    auto pacman = static_cast<Pacman*>(entity.get());
-                    updatePacmanPosition(*pacman, deltaTime);
-                    checkPacmanCollisions(*pacman, entitiesToRemove);
-                    break;
-                }
-                case EntityType::Ghost: {
-                    auto ghost = static_cast<Ghost*>(entity.get());
-                    ghost->elapsedTime += deltaTime;
-                    if (ghost->state == Ghost::State::Waiting && ghost->elapsedTime >= ghost->spawnDelay) {
-                        ghost->state = Ghost::State::Chasing;
-                    }
-                    if (ghost->state == Ghost::State::Chasing) {
-                        if (ghost->useSmartMovement) {
-                            updateGhostPositionSmart(*ghost, deltaTime, currentLevel);
-                        } else {
-                            updateGhostPositionSimple(*ghost, deltaTime);
-                        }
-                    }
-                    break;
-                }
-                    // Handle other entity types if necessary
-                default:
-                    break;
-            }
-        }
-
-        // Remove entities marked for deletion
-        for (auto entityToRemove : entitiesToRemove) {
-            // Notify observers before removing the entity
-            eventSubject.notify(entityToRemove->getType());
-            removeEntity(entityToRemove);
-        }
-
-
-        if (allCoinsAndFruitsEaten()) {
-            incrementLevel();
-            resetEntities();
-            respawnCoinsAndFruits();
-        }
-
-        eventSubject.notify(EntityType::Empty); // Using Empty as a general update signal
-    }
-
     void World::updatePacmanPosition(Pacman& pacman, double deltaTime) {
         Entity::Direction currentDirection = pacman.direction_;
         Entity::Direction desiredDirection = pacman.desiredDirection_;
@@ -235,21 +233,44 @@ namespace Logic {
         Rectangle pacmanBounds = getEntityBounds(pacman);
 
         for (auto& entity : entities) {
-            if (entity->getType() == EntityType::Coin || entity->getType() == EntityType::Fruit) {
-                Rectangle itemBounds = getEntityBounds(*entity);
-                if (checkCollision(pacmanBounds, itemBounds)) {
-                    entitiesToRemove.push_back(entity.get());
-
-                    if (entity->getType() == EntityType::Coin) {
+            Rectangle entityBounds = getEntityBounds(*entity);
+            if (checkCollision(pacmanBounds, entityBounds)) {
+                switch (entity->getType()) {
+                    case EntityType::Coin:
+                        entitiesToRemove.push_back(entity.get());
                         eatenCoins++;
                         std::cout << "Coin eaten. Total eaten: " << eatenCoins << "/" << totalCoins << std::endl;
-                    } else if (entity->getType() == EntityType::Fruit) {
+                        eventSubject.notify(EntityType::Coin);
+                        break;
+
+                    case EntityType::Fruit:
+                        entitiesToRemove.push_back(entity.get());
                         eatenFruits++;
                         std::cout << "Fruit eaten. Total eaten: " << eatenFruits << "/" << totalFruits << std::endl;
-                    }
+                        eventSubject.notify(EntityType::Fruit);
 
-                    // Notify observers (for scoring)
-                    eventSubject.notify(entity->getType());
+                        // Make all ghosts vulnerable
+                        for (auto& ghostEntity : entities) {
+                            if (auto ghost = dynamic_cast<Ghost*>(ghostEntity.get())) {
+                                ghost->makeVulnerable(1);  // 10 seconds of vulnerability
+                            }
+                        }
+                        break;
+
+                    case EntityType::Ghost:
+                        if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
+                            if (ghost->isVulnerable) {
+                                eventSubject.notify(EntityType::Ghost);  // Notify score observer
+                                ghost->position = {10, 5};  // Respawn in center
+                                ghost->isVulnerable = false;
+                            } else {
+                                pacman.setLives(pacman.getLives() - 1);
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
             }
         }
@@ -484,6 +505,12 @@ namespace Logic {
                             dy /= length;
                         }
 
+                        if (ghost.isVulnerable) {
+                            // Reverse logic to maximize distance from Pacman
+                            dx = -dx;
+                            dy = -dy;
+                        }
+
                         // Move ghost
                         double moveDistance = ghost.speed * deltaTime * 5.0 * (0.5 + 0.5 * difficulty);
                         ghost.position.x += dx * moveDistance;
@@ -499,6 +526,7 @@ namespace Logic {
                 }
             }
         }
+
     }
 
     void World::incrementLevel() {
@@ -541,29 +569,36 @@ namespace Logic {
     }
 
     void World::resetEntities() {
-        // Implement the logic to reset entities to their starting positions
+        // Remove all existing ghosts
+        entities.erase(
+                std::remove_if(entities.begin(), entities.end(),
+                               [](const std::shared_ptr<Entity>& entity) {
+                                   return dynamic_cast<Ghost*>(entity.get()) != nullptr;
+                               }
+                ),
+                entities.end()
+        );
+
+        // Reset Pacman to starting position
         for (auto& entity : entities) {
-            if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
-                // Reset ghost to starting position
-                removeEntity(entity.get());
-
-                auto ghost1 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 9, 5));
-                if (ghost1) ghost1->spawnDelay = 0.0;  // First ghost starts immediately
-
-                auto ghost2 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 10, 5));
-                if (ghost2) ghost2->spawnDelay = 0.0;  // Second ghost also starts immediately
-
-                auto ghost3 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 11, 5));
-                if (ghost3) ghost3->spawnDelay = 5.0;  // Third ghost starts after 5 seconds
-
-                auto ghost4 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 12, 5));
-                if (ghost4) ghost4->spawnDelay = 10.0;  // Fourth ghost starts after 10 seconds
-            }
-            else if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
-                // Reset Pacman to starting position
+            if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
                 pacman->position = {6, 1};
+                break;
             }
         }
+
+        // Create new ghosts
+        auto ghost1 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 9, 5));
+        if (ghost1) ghost1->spawnDelay = 0.0;  // First ghost starts immediately
+
+        auto ghost2 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 10, 5));
+        if (ghost2) ghost2->spawnDelay = 0.0;  // Second ghost also starts immediately
+
+        auto ghost3 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 11, 5));
+        if (ghost3) ghost3->spawnDelay = 5.0;  // Third ghost starts after 5 seconds
+
+        auto ghost4 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 12, 5));
+        if (ghost4) ghost4->spawnDelay = 10.0;  // Fourth ghost starts after 10 seconds
     }
 
     void World::respawnCoinsAndFruits() {
@@ -581,6 +616,14 @@ namespace Logic {
         }
         eatenCoins = 0;
         eatenFruits = 0;
+    }
+
+    int World::getScore() const {
+        return scoreObserver.getCurrentScore();
+    }
+
+    void World::updateScore(double deltaTime) {
+        scoreObserver.update(deltaTime);
     }
 
 } // namespace Logic
