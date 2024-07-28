@@ -32,9 +32,7 @@ namespace Logic {
         const std::vector<std::shared_ptr<Entity>>& getEntities() const;
         bool checkCollision(const Rectangle& rect1, const Rectangle& rect2) const;
 
-
         Pacman* getPacman() const;
-
 
         void updateGhostPositionSimple(Ghost& ghost, double deltaTime);
         void updateGhostPositionSmart(Ghost& ghost, double deltaTime, int level);
@@ -42,10 +40,10 @@ namespace Logic {
         int getManhattanDistance(const Entity::Position& pos1, const Entity::Position& pos2) const;
         std::vector<Entity::Direction> getViableDirections(const Ghost& ghost) const;
 
-
         int getScore() const;
+        int getEatenCoins() const;
+        int getEatenFruits() const;
         void updateScore(double deltaTime);
-
 
         int getCurrentLevel() const { return currentLevel; }
         void incrementLevel();
@@ -56,8 +54,6 @@ namespace Logic {
         int currentLevel = 1;
         int totalCoins = 0;
         int totalFruits = 0;
-        int eatenCoins = 0;
-        int eatenFruits = 0;
 
         void attachObserver(const std::shared_ptr<IObserver>& observer) {
             eventSubject.attach(observer);
@@ -67,7 +63,7 @@ namespace Logic {
         std::vector<std::shared_ptr<Entity>> entities;
         std::vector<Ghost*> ghosts;
         double elapsedTime = 0.0;
-        EntityType map[height][width];
+        EntityType map[height][width]{};
         std::shared_ptr<EntityFactory> entityFactory; // Factory member
         Subject eventSubject;    // Subject for observer pattern
         std::shared_ptr<Score> scoreObserver;
@@ -89,10 +85,7 @@ namespace Logic {
         std::vector<Entity::Position> reconstructPath(Node *goal);
         std::vector<Entity::Position> findPath(const Ghost &ghost, const Pacman &pacman);
 
-
-
         void resetEntities();
-
         void respawnCoinsAndFruits();
 
         double ghostSpeedMultiplier = 1.0;
@@ -102,7 +95,6 @@ namespace Logic {
         void decreaseFearModeDuration();
         void resetGhostSpeed();
         void resetFearModeDuration();
-
     };
 
 } // namespace Logic

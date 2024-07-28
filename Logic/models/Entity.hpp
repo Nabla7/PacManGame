@@ -131,6 +131,10 @@ public:
         }
 
         void update(double deltaTime) {
+            elapsedTime += deltaTime;
+            if (state == State::Waiting && elapsedTime >= spawnDelay) {
+                state = State::Chasing;
+            }
             if (isVulnerable) {
                 vulnerabilityTimer -= deltaTime;
                 if (vulnerabilityTimer <= 0) {

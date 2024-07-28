@@ -40,8 +40,6 @@ namespace Logic {
 
         totalCoins = 0;
         totalFruits = 0;
-        eatenCoins = 0;
-        eatenFruits = 0;
 
         // Copy the initial map to the world's map
         for (int y = 0; y < height; ++y) {
@@ -68,6 +66,8 @@ namespace Logic {
         // Add observer for keeping track of the score
         scoreObserver = std::make_shared<Score>();
         eventSubject.attach(scoreObserver);
+        scoreObserver->setTotalCoins(totalCoins);
+        scoreObserver->setTotalFruits(totalFruits);
     }
 
     World::~World() {
@@ -88,10 +88,7 @@ namespace Logic {
                 }
                 case EntityType::Ghost: {
                     auto ghost = static_cast<Ghost*>(entity.get());
-                    ghost->elapsedTime += deltaTime;
-                    if (ghost->state == Ghost::State::Waiting && ghost->elapsedTime >= ghost->spawnDelay) {
-                        ghost->state = Ghost::State::Chasing;
-                    }
+                    ghost->update(deltaTime);
                     if (ghost->state == Ghost::State::Chasing) {
                         if (ghost->useSmartMovement) {
                             updateGhostPositionSmart(*ghost, deltaTime, currentLevel);
@@ -107,8 +104,6 @@ namespace Logic {
             }
         }
 
-
-
         // Remove entities marked for deletion
         for (auto entityToRemove : entitiesToRemove) {
             // Notify observers before removing the entity
@@ -116,14 +111,13 @@ namespace Logic {
             removeEntity(entityToRemove);
         }
 
+        updateScore(deltaTime);
 
         if (allCoinsAndFruitsEaten()) {
             incrementLevel();
             resetEntities();
             respawnCoinsAndFruits();
         }
-
-        eventSubject.notify(EntityType::Empty); // Using Empty as a general update signal
     }
 
     std::shared_ptr<Entity> World::addEntity(EntityType type, int x, int y) {
@@ -239,29 +233,26 @@ namespace Logic {
                 switch (entity->getType()) {
                     case EntityType::Coin:
                         entitiesToRemove.push_back(entity.get());
-                        eatenCoins++;
-                        std::cout << "Coin eaten. Total eaten: " << eatenCoins << "/" << totalCoins << std::endl;
-                        eventSubject.notify(EntityType::Coin);
+                        //std::cout << "Coin eaten. Total eaten: " << scoreObserver->getEatenCoins() + 1 << "/" << totalCoins << std::endl;
+                        //eventSubject.notify(EntityType::Coin);
                         break;
 
                     case EntityType::Fruit:
                         entitiesToRemove.push_back(entity.get());
-                        eatenFruits++;
-                        std::cout << "Fruit eaten. Total eaten: " << eatenFruits << "/" << totalFruits << std::endl;
-                        eventSubject.notify(EntityType::Fruit);
+                        //std::cout << "Fruit eaten. Total eaten: " << scoreObserver->getEatenFruits() + 1 << "/" << totalFruits << std::endl;
+                        //eventSubject.notify(EntityType::Fruit);
 
                         // Make all ghosts vulnerable
                         for (auto& ghostEntity : entities) {
                             if (auto ghost = dynamic_cast<Ghost*>(ghostEntity.get())) {
-                                ghost->makeVulnerable(1);  // 10 seconds of vulnerability
+                                ghost->makeVulnerable(10);  // 10 seconds of vulnerability
                             }
                         }
                         break;
-
+                    /*
                     case EntityType::Ghost:
                         if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
                             if (ghost->isVulnerable) {
-                                eventSubject.notify(EntityType::Ghost);  // Notify score observer
                                 ghost->position = {10, 5};  // Respawn in center
                                 ghost->isVulnerable = false;
                             } else {
@@ -269,6 +260,7 @@ namespace Logic {
                             }
                         }
                         break;
+                        */
 
                     default:
                         break;
@@ -527,7 +519,6 @@ namespace Logic {
                 }
             }
         }
-
     }
 
     void World::incrementLevel() {
@@ -545,7 +536,7 @@ namespace Logic {
     }
 
     bool World::allCoinsAndFruitsEaten() const {
-        return eatenCoins == totalCoins && eatenFruits == totalFruits;
+        return scoreObserver->getEatenCoins() == totalCoins && scoreObserver->getEatenFruits() == totalFruits;
     }
 
     void World::increaseGhostSpeed() {
@@ -567,6 +558,14 @@ namespace Logic {
     void World::prepareNextLevel() {
         resetEntities();
         respawnCoinsAndFruits();
+
+        // Reset ghost vulnerability
+        for (auto& entity : entities) {
+            if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
+                ghost->isVulnerable = false;
+                ghost->vulnerabilityTimer = 0;
+            }
+        }
     }
 
     void World::resetEntities() {
@@ -603,8 +602,6 @@ namespace Logic {
     }
 
     void World::respawnCoinsAndFruits() {
-        // Implement the logic to respawn coins and fruits
-        // For example:
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 if (map[y][x] == EntityType::Coin) {
@@ -615,16 +612,25 @@ namespace Logic {
                 }
             }
         }
-        eatenCoins = 0;
-        eatenFruits = 0;
+        scoreObserver->resetEatenCoinsAndFruits();
     }
 
     int World::getScore() const {
         return scoreObserver->getCurrentScore();
     }
 
+    int World::getEatenCoins() const {
+        return scoreObserver->getEatenCoins();
+    }
+
+    int World::getEatenFruits() const {
+        return scoreObserver->getEatenFruits();
+    }
+
     void World::updateScore(double deltaTime) {
-        scoreObserver->update(deltaTime);
+        if (scoreObserver) {
+            scoreObserver->update(deltaTime);
+        }
     }
 
 } // namespace Logic

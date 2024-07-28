@@ -4,7 +4,11 @@
 
 #include "InputHandler.hpp"
 #include "models/World.hpp"
-
+/*
+ * We create an interface from which world inherits such that we can update and handle input the world in one go.
+ * World is inhabited by entities, all entities have unique methods for update and input.
+ * This makes it easy and is good practice.
+ * */
 namespace Logic {
 
     class Controller {

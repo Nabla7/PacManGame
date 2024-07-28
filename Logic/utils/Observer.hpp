@@ -43,42 +43,69 @@ public:
 
     class Score : public IObserver {
     public:
-        Score() : currentScore(0), timeSinceLastCoin(0), baseScorePerCoin(10), maxScorePerCoin(50), scoreDecayRate(1) {}
+        Score() : totalScore(0), coinValue(10), timeSinceLastDecay(0),
+                  eatenCoins(0), totalCoins(0), eatenFruits(0), totalFruits(0) {}
 
         void onNotify(EntityType entityType) override {
-            if (entityType == EntityType::Coin) {
-                int scoreForCoin = getScoreForCoin();
-                currentScore += scoreForCoin;
-                std::cout << "Score added: " << scoreForCoin << ". Current score: " << currentScore << std::endl;
-            } else if (entityType == EntityType::Fruit) {
-                currentScore += 100;
-                std::cout << "Fruit eaten. Score: " << currentScore << std::endl;
-            } else if (entityType == EntityType::Ghost) {
-                currentScore += 200;
-                std::cout << "Ghost eaten. Score: " << currentScore << std::endl;
+            switch (entityType) {
+                case EntityType::Coin:
+                    totalScore += coinValue;
+                    eatenCoins++;
+                    std::cout << "Coin collected. Score: " << totalScore << ", Coins eaten: " << eatenCoins << "/" << totalCoins << std::endl;
+                    break;
+                case EntityType::Fruit:
+                    totalScore += 30;
+                    eatenFruits++;
+                    std::cout << "Fruit eaten. Score: " << totalScore << ", Fruits eaten: " << eatenFruits << "/" << totalFruits << std::endl;
+                    break;
+                case EntityType::Ghost:
+                    totalScore += 60;
+                    std::cout << "Ghost eaten. Score: " << totalScore << std::endl;
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        void update(double deltaTime) {
+            timeSinceLastDecay += deltaTime;
+            if (timeSinceLastDecay >= 1.0) {
+                int decayAmount = static_cast<int>(timeSinceLastDecay);
+
+                // Decay total score
+                int previousTotalScore = totalScore;
+                totalScore = std::max(0, totalScore - decayAmount);
+
+                // Decay coin value
+                int previousCoinValue = coinValue;
+                coinValue = std::max(1, coinValue - decayAmount);  // Minimum coin value is 1
+
+                timeSinceLastDecay -= decayAmount;
+
+                std::cout << "Score decayed from " << previousTotalScore << " to " << totalScore << std::endl;
+                std::cout << "Coin value decayed from " << previousCoinValue << " to " << coinValue << std::endl;
             }
         }
 
-        void update(double deltaTime) {
-            currentScore = std::max(0, currentScore - static_cast<int>(scoreDecayRate * deltaTime));
-            timeSinceLastCoin += deltaTime;
+        void resetEatenCoinsAndFruits() {
+            eatenCoins = 0;
+            eatenFruits = 0;
         }
 
-        int getCurrentScore() const { return currentScore; }
+        int getCurrentScore() const { return totalScore; }
+        int getEatenCoins() const { return eatenCoins; }
+        int getEatenFruits() const { return eatenFruits; }
+        void setTotalCoins(int total) { totalCoins = total; }
+        void setTotalFruits(int total) { totalFruits = total; }
 
     private:
-        int currentScore;
-        double timeSinceLastCoin;
-        int baseScorePerCoin;
-        int maxScorePerCoin;
-        double scoreDecayRate;
-
-        int getScoreForCoin() {
-            double factor = std::exp(-timeSinceLastCoin / 2.0);
-            int score = baseScorePerCoin + static_cast<int>((maxScorePerCoin - baseScorePerCoin) * factor);
-            timeSinceLastCoin = 0;
-            return score;
-        }
+        int totalScore;
+        int coinValue;
+        double timeSinceLastDecay;
+        int eatenCoins;
+        int totalCoins;
+        int eatenFruits;
+        int totalFruits;
     };
 
 } // namespace Logic

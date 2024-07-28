@@ -48,8 +48,8 @@ namespace Representation {
         worldView->update();
 
         std::cout << "Pacman lives: " << world.getPacman()->getLives() << std::endl;
-        std::cout << "Coins left: " << (world.totalCoins - world.eatenCoins) << std::endl;
-        std::cout << "Fruits left: " << (world.totalFruits - world.eatenFruits) << std::endl;
+        std::cout << "Coins left: " << (world.totalCoins - world.getEatenCoins()) << std::endl;
+        std::cout << "Fruits left: " << (world.totalFruits - world.getEatenFruits()) << std::endl;
 
         if (showingLevelText) {
             levelDisplayTimer -= deltaTime;
