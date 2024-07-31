@@ -276,7 +276,7 @@ namespace Logic {
 
         if (ghost.state == Ghost::State::Chasing) {
             auto newPosition = ghost.position;
-            double moveDistance = ghost.speed * deltaTime * 5.0;
+            double moveDistance = ghost.getSpeed() * deltaTime * 5.0;
 
             switch (ghost.lockedDirection) {
                 case Entity::Direction::Up:    newPosition.y -= moveDistance; break;
@@ -320,7 +320,7 @@ namespace Logic {
             return viableDirections[utils::Random::getInstance().getInt(0, viableDirections.size() - 1)];
         }
 
-        int minDistance = std::numeric_limits<int>::max();
+        int bestDistance = ghost.isVulnerable ? 0 : std::numeric_limits<int>::max();
         std::vector<Entity::Direction> bestDirections;
 
         for (const auto& dir : viableDirections) {
@@ -333,11 +333,11 @@ namespace Logic {
             }
 
             int distance = getManhattanDistance(newPos, pacman.position);
-            if (distance < minDistance) {
-                minDistance = distance;
+            if ((ghost.isVulnerable && distance > bestDistance) || (!ghost.isVulnerable && distance < bestDistance)) {
+                bestDistance = distance;
                 bestDirections.clear();
                 bestDirections.push_back(dir);
-            } else if (distance == minDistance) {
+            } else if (distance == bestDistance) {
                 bestDirections.push_back(dir);
             }
         }
@@ -392,17 +392,17 @@ namespace Logic {
         return nullptr; // Return nullptr if no Pacman found
     }
 
-    std::vector<Entity::Position> World::findPath(const Ghost& ghost, const Pacman& pacman) {
+    std::vector<Entity::Position> World::findPath(const Entity::Position& start, const Entity::Position& goal) {
         std::vector<std::vector<bool>> visited(height, std::vector<bool>(width, false));
         std::vector<std::vector<Node>> nodes(height, std::vector<Node>(width, Node(0, 0)));
 
         auto compare = [](const Node* a, const Node* b) { return a->f > b->f; };
         std::priority_queue<Node*, std::vector<Node*>, decltype(compare)> openList(compare);
 
-        int startX = static_cast<int>(std::round(ghost.position.x));
-        int startY = static_cast<int>(std::round(ghost.position.y));
-        int goalX = static_cast<int>(std::round(pacman.position.x));
-        int goalY = static_cast<int>(std::round(pacman.position.y));
+        int startX = static_cast<int>(std::round(start.x));
+        int startY = static_cast<int>(std::round(start.y));
+        int goalX = static_cast<int>(std::round(goal.x));
+        int goalY = static_cast<int>(std::round(goal.y));
 
         nodes[startY][startX] = Node(startX, startY);
         openList.push(&nodes[startY][startX]);
@@ -471,26 +471,24 @@ namespace Logic {
         if (ghost.state == Ghost::State::Chasing) {
             Pacman* pacman = getPacman();
             if (pacman) {
-                // Calculate difficulty factor using a sigmoid function
                 double difficulty = 1.0 / (1.0 + std::exp(-0.1 * (level - 50)));
 
-                std::vector<Entity::Position> path = findPath(ghost, *pacman);
-                if (!path.empty() && path.size() > 1) {
-                    Entity::Position nextPos = path[1]; // Next position after current
+                std::vector<Entity::Position> path = ghost.isVulnerable ?
+                                                     findFurthestPath(ghost.position, pacman->position) :
+                                                     findPath(ghost.position, pacman->position);
 
-                    // Calculate direction vector
+                if (!path.empty() && path.size() > 1) {
+                    Entity::Position nextPos = path[1];
+
                     double dx = nextPos.x - ghost.position.x;
                     double dy = nextPos.y - ghost.position.y;
                     double length = std::sqrt(dx * dx + dy * dy);
 
                     if (length > 0) {
-                        // Normalize direction vector
                         dx /= length;
                         dy /= length;
 
-                        // Adjust direction based on difficulty
                         if (utils::Random::getInstance().getDouble(0, 1) > difficulty) {
-                            // Randomly adjust direction for lower difficulties
                             dx += utils::Random::getInstance().getDouble(-0.5, 0.5) * (1 - difficulty);
                             dy += utils::Random::getInstance().getDouble(-0.5, 0.5) * (1 - difficulty);
                             length = std::sqrt(dx * dx + dy * dy);
@@ -498,18 +496,10 @@ namespace Logic {
                             dy /= length;
                         }
 
-                        if (ghost.isVulnerable) {
-                            // Reverse logic to maximize distance from Pacman
-                            dx = -dx;
-                            dy = -dy;
-                        }
-
-                        // Move ghost
-                        double moveDistance = ghost.speed * deltaTime * 5.0 * (0.5 + 0.5 * difficulty);
+                        double moveDistance = ghost.getSpeed() * deltaTime * 5.0 * (0.5 + 0.5 * difficulty);
                         ghost.position.x += dx * moveDistance;
                         ghost.position.y += dy * moveDistance;
 
-                        // Update locked direction based on primary movement axis
                         if (std::abs(dx) > std::abs(dy)) {
                             ghost.lockedDirection = (dx > 0) ? Entity::Direction::Right : Entity::Direction::Left;
                         } else {
@@ -519,6 +509,30 @@ namespace Logic {
                 }
             }
         }
+    }
+
+    std::vector<Entity::Position> World::findFurthestPath(const Entity::Position& ghost, const Entity::Position& pacman) {
+        std::vector<Entity::Position> furthestPath;
+        int maxDistance = 0;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (map[y][x] != EntityType::Wall) {
+                    Entity::Position target = {static_cast<double>(x), static_cast<double>(y)};
+                    int distanceToPacman = getManhattanDistance(target, pacman);
+
+                    if (distanceToPacman > maxDistance) {
+                        std::vector<Entity::Position> path = findPath(ghost, target);
+                        if (!path.empty()) {
+                            maxDistance = distanceToPacman;
+                            furthestPath = path;
+                        }
+                    }
+                }
+            }
+        }
+
+        return furthestPath;
     }
 
     void World::incrementLevel() {

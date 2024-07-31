@@ -8,12 +8,9 @@ project(PacManGame LANGUAGES CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
-# FetchContent for SFML
-include(FetchContent)
-FetchContent_Declare(SFML
-        GIT_REPOSITORY https://github.com/SFML/SFML.git
-        GIT_TAG 2.6.x)
-FetchContent_MakeAvailable(SFML)
+# Set the path to your local SFML installation
+set(SFML_DIR "${CMAKE_SOURCE_DIR}/libs/SFML-2.5.1-macos-clang/lib/cmake/SFML")
+find_package(SFML 2.5.1 COMPONENTS system window graphics audio REQUIRED)
 
 # Add the Logic and Representation directories to the include paths
 include_directories(${CMAKE_SOURCE_DIR}/Logic)
@@ -44,4 +41,10 @@ if(BUILD_TESTS)
     target_link_libraries(PacManGameTests PRIVATE LogicLib sfml-graphics sfml-audio)
 endif()
 
-install(TARGETS PacManGame)
+# Install target
+install(TARGETS PacManGame
+        RUNTIME DESTINATION bin
+        )
+
+# Print SFML directories for debugging
+message(STATUS "SFML_DIR: ${SFML_DIR}")

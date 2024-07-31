@@ -2,6 +2,7 @@
 #include "EntityView.hpp"
 #include "factories/ConcreteEntityFactory.hpp"
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 namespace Representation {
 
@@ -13,10 +14,10 @@ void testSprites() {
     Logic::PacmanGameEntityFactory factory;
 
     // Use the factory to create entities
-    std::unique_ptr<Logic::Entity> coin = factory.createCoin();
-    std::unique_ptr<Logic::Entity> fruit = factory.createFruit();
-    std::unique_ptr<Logic::Entity> ghost = factory.createGhost();
-    std::unique_ptr<Logic::Entity> pacman = factory.createPacman();
+    std::shared_ptr<Logic::Entity> coin = factory.createCoin();
+    std::shared_ptr<Logic::Entity> fruit = factory.createFruit();
+    std::shared_ptr<Logic::Entity> ghost = factory.createGhost();
+    std::shared_ptr<Logic::Entity> pacman = factory.createPacman();
 
     // Set the positions of the entities
     coin->position.x = -0.5f;

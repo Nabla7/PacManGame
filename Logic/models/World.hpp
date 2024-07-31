@@ -83,7 +83,7 @@ namespace Logic {
         };
 
         std::vector<Entity::Position> reconstructPath(Node *goal);
-        std::vector<Entity::Position> findPath(const Ghost &ghost, const Pacman &pacman);
+        std::vector<Entity::Position> findPath(const Entity::Position& start, const Entity::Position& goal);
 
         void resetEntities();
         void respawnCoinsAndFruits();
@@ -95,6 +95,7 @@ namespace Logic {
         void decreaseFearModeDuration();
         void resetGhostSpeed();
         void resetFearModeDuration();
+        std::vector<Entity::Position> findFurthestPath(const Entity::Position& ghost, const Entity::Position& pacman);
     };
 
 } // namespace Logic
