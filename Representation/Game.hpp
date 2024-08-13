@@ -10,6 +10,7 @@
 #include "../Logic/Controller.hpp"
 #include "Camera.hpp"
 #include "GameState.hpp"
+#include "HighScoreManager.hpp"
 
 namespace Representation {
 
@@ -33,6 +34,7 @@ namespace Representation {
         Camera& getCamera() { return camera_; }
         const std::string& getTextureFilePath() const { return textureFilePath; }
         sf::Text& getScoreText() { return scoreText; }
+        HighScoreManager& getHighScoreManager() { return highScoreManager_; }
 
     private:
         sf::RenderWindow window_;
@@ -46,6 +48,7 @@ namespace Representation {
         sf::Text scoreText;
 
         StateManager stateManager_;
+        HighScoreManager highScoreManager_;
 
         void render();
 

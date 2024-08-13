@@ -234,15 +234,10 @@ namespace Logic {
                 switch (entity->getType()) {
                     case EntityType::Coin:
                         entitiesToRemove.push_back(entity.get());
-                        //std::cout << "Coin eaten. Total eaten: " << scoreObserver->getEatenCoins() + 1 << "/" << totalCoins << std::endl;
-                        //eventSubject.notify(EntityType::Coin);
                         break;
 
                     case EntityType::Fruit:
                         entitiesToRemove.push_back(entity.get());
-                        //std::cout << "Fruit eaten. Total eaten: " << scoreObserver->getEatenFruits() + 1 << "/" << totalFruits << std::endl;
-                        //eventSubject.notify(EntityType::Fruit);
-
                         // Make all ghosts vulnerable
                         for (auto& ghostEntity : entities) {
                             if (auto ghost = dynamic_cast<Ghost*>(ghostEntity.get())) {

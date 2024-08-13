@@ -72,7 +72,9 @@ namespace Representation {
         }
 
         if (world.getPacman()->getLives() <= 0) {
-            game.getStateManager().pushState(std::make_unique<GameOverState>());
+            int finalScore = world.getScore();
+            int finalLevel = world.getCurrentLevel();
+            game.getStateManager().pushState(std::make_unique<GameOverState>(finalScore, finalLevel));
         }
     }
 
