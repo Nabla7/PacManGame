@@ -31,7 +31,7 @@ public:
         Down,
         Left,
         Right
-    } direction;
+    };
 
     double speed = 1;
 
@@ -85,7 +85,6 @@ class Coin : public Entity {
 public:
     void setValue(int v) { value = v; }
     int getValue() const { return value; }
-
     EntityType getType() const override { return EntityType::Coin; }
 };
 
@@ -96,18 +95,56 @@ public:
     EntityType getType() const override { return EntityType::Fruit; }
 };
 
+// In Logic/models/Entity.hpp
+
     class Ghost : public Entity {
     public:
         enum class State { Waiting, Chasing };
 
-        Ghost(double spawnTime = 0.0) : state(State::Waiting), spawnTimer(spawnTime), lockedDirection(Direction::Up), useSmartMovement(true) {}
+        Ghost(double spawnDelay = 0.0)
+                : state(State::Waiting),
+                  spawnDelay(spawnDelay),
+                  lockedDirection(Direction::Up),
+                  useSmartMovement(false),
+                  elapsedTime(0.0)  // Track elapsed time since creation
+        {}
 
         EntityType getType() const override { return EntityType::Ghost; }
 
         State state;
-        double spawnTimer;
+        double spawnDelay;
         Direction lockedDirection;
         bool useSmartMovement;
+        double elapsedTime;  // Elapsed time since ghost creation
+
+        void setSpeedMultiplier(double multiplier) { speedMultiplier = multiplier; }
+        double getSpeed() const { return speed * speedMultiplier; }
+
+        bool isVulnerable;
+        double vulnerabilityTimer;
+
+        void makeVulnerable(double duration) {
+            isVulnerable = true;
+            vulnerabilityTimer = duration;
+            setSpeedMultiplier(0.66);  // Slow down when vulnerable
+        }
+
+        void update(double deltaTime) {
+            elapsedTime += deltaTime;
+            if (state == State::Waiting && elapsedTime >= spawnDelay) {
+                state = State::Chasing;
+            }
+            if (isVulnerable) {
+                vulnerabilityTimer -= deltaTime;
+                if (vulnerabilityTimer <= 0) {
+                    isVulnerable = false;
+                    setSpeedMultiplier(1.0);  // Return to normal speed
+                }
+            }
+        }
+
+    private:
+        double speedMultiplier = 1.0;
     };
 
 class Wall : public Entity {

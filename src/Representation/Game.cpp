@@ -12,11 +12,11 @@ namespace Representation {
 
 // Game.cpp
 Game::Game()
-    : window_(sf::VideoMode(20*32, 11*32), "Pacman Game"),
-      inputHandler_(window_),
-      world_(std::make_shared<Logic::PacmanGameEntityFactory>()),
-      camera_(window_.getSize().x, window_.getSize().y),
-      view_(sf::FloatRect(-150.f, -70.f, 1000.f, 550.f))
+        : window_(sf::VideoMode(20*32, 11*32), "Pacman Game"),
+          inputHandler_(window_),
+          world_(std::make_shared<Logic::PacmanGameEntityFactory>()),
+          camera_(window_.getSize().x, window_.getSize().y),
+          view_(sf::FloatRect(-150.f, -70.f, 1000.f, 550.f))
       {
 
         // Initialize world with the factory
@@ -46,6 +46,21 @@ Game::Game()
         scoreText.setPosition(700, 0); // Top-left corner of the window
  }
 
+    void Game::resetGame() {
+        // Reset the world
+        world_ = Logic::World(std::make_shared<Logic::PacmanGameEntityFactory>());
+
+        // Clear and recreate entity views
+        entityViews_.clear();
+        for (const auto& entity : world_.getEntities()) {
+            entityViews_.emplace_back(window_, *entity, camera_, textureFilePath);
+        }
+
+        // Reset other game states if necessary
+        // For example, reset the score
+        // scoreText.setString("Score: 0");
+    }
+
 
 void Game::render() {
     window_.clear();
@@ -68,26 +83,19 @@ void Game::run() {
     stopwatch.start();
 
     while (window_.isOpen()) {
-        processInput(); // Handle user input
+        Logic::GameAction action = inputHandler_.handleInput();
+        handleInput(action);
 
-        // Update game logic at a fixed time step
         while (stopwatch.getElapsedTime() > utils::Stopwatch::getMaxFrameTime()) {
-            update(utils::Stopwatch::getMaxFrameTime()); // Update game state
-            stopwatch.start(); // Restart the stopwatch
+            update(utils::Stopwatch::getMaxFrameTime());
+            stopwatch.start();
         }
 
-        render(); // Render the frame
-        stopwatch.capFrameRate(); // Cap the frame rate
+        render();
+        stopwatch.capFrameRate();
     }
 }
 
-
-void Game::processInput() {
-    State* currentState = stateManager_.getCurrentState();
-    if (currentState) {
-        currentState->handleInput(*this);
-    }
-}
 
 void Game::update(double deltaTime) {
     State* currentState = stateManager_.getCurrentState();
@@ -96,22 +104,23 @@ void Game::update(double deltaTime) {
     }
 }
 
-
+void Game::handleInput(Logic::GameAction action) {
+    State* currentState = stateManager_.getCurrentState();
+    if (currentState) {
+        currentState->handleInput(*this, action);
+    }
+}
 
 sf::RenderWindow& Game::getWindow() {
     return window_;
-}
-
-InputHandler& Game::getInputHandler() {
-    return inputHandler_;
 }
 
 StateManager& Game::getStateManager() {
     return stateManager_;
 }
 
-Logic::World& Game::getWorld() {
-    return world_;
+Representation::InputHandler& Game::getInputHandler() {
+    return inputHandler_;
 }
 
 

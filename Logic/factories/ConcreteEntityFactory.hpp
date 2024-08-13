@@ -9,24 +9,24 @@ namespace Logic {
 
 class PacmanGameEntityFactory : public EntityFactory {
 public:
-    std::unique_ptr<Entity> createCoin() override {
-        return std::make_unique<Coin>();
+    std::shared_ptr<Entity> createCoin() override {
+        return std::make_shared<Coin>();
     }
 
-    std::unique_ptr<Entity> createFruit() override {
-        return std::make_unique<Fruit>();
+    std::shared_ptr<Entity> createFruit() override {
+        return std::make_shared<Fruit>();
     }
 
-    std::unique_ptr<Entity> createGhost() override {
-        return std::make_unique<Ghost>();
+    std::shared_ptr<Entity> createGhost() override {
+        return std::make_shared<Ghost>();
     }
 
-    std::unique_ptr<Entity> createWall() override {
-        return std::make_unique<Wall>();
+    std::shared_ptr<Entity> createWall() override {
+        return std::make_shared<Wall>();
     }
 
-    std::unique_ptr<Entity> createPacman() override {
-        return std::make_unique<Pacman>();
+    std::shared_ptr<Entity> createPacman() override {
+        return std::make_shared<Pacman>();
     }
 };
 

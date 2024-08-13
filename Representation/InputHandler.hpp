@@ -1,30 +1,21 @@
 // Representation/InputHandler.hpp
-#ifndef INPUT_HANDLER_HPP
-#define INPUT_HANDLER_HPP
+#ifndef REPRESENTATION_INPUT_HANDLER_HPP
+#define REPRESENTATION_INPUT_HANDLER_HPP
 
 #include <SFML/Graphics.hpp>
+#include "../Logic/InputHandler.hpp"
 
 namespace Representation {
 
-enum class Action {
-    MoveUp,
-    MoveDown,
-    MoveLeft,
-    MoveRight,
-    Pause,
-    Quit,
-    None
-};
+    class InputHandler : public Logic::InputHandler {
+    public:
+        InputHandler(sf::RenderWindow& window) : window_(window) {}
+        Logic::GameAction handleInput() override;
 
-class InputHandler {
-public:
-    InputHandler(sf::RenderWindow& window) : window_(window) {}
-    Action handleInput();
-
-private:
-    sf::RenderWindow& window_;
-};
+    private:
+        sf::RenderWindow& window_;
+    };
 
 } // namespace Representation
 
-#endif // INPUT_HANDLER_HPP
+#endif // REPRESENTATION_INPUT_HANDLER_HPP

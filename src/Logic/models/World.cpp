@@ -17,14 +17,14 @@ namespace Logic {
         int initialMap[height][width] = {
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 3, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1},
-                {1, 2, 1, 1, 2, 1, 4, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
+                {1, 2, 1, 1, 2, 1, 0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
                 {1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
                 {1, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 2, 1, 1, 2, 1, 2, 1},
-                {1, 0, 5, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 1},
+                {1, 0, 5, 2, 2, 2, 2, 1, 4, 4, 4, 4, 1, 2, 2, 2, 2, 2, 2, 1},
                 {1, 0, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 2, 1},
                 {1, 0, 1, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1},
                 {1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 2, 1},
-                {1, 0, 0, 0, 4, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 2, 2, 2, 3, 1},
+                {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 2, 2, 2, 1, 2, 2, 2, 3, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
         };
 
@@ -38,32 +38,91 @@ namespace Logic {
                 {5, EntityType::Pacman}
         };
 
+        totalCoins = 0;
+        totalFruits = 0;
+
         // Copy the initial map to the world's map
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 EntityType type = entityTypeMap[initialMap[y][x]];
                 map[y][x] = type;
                 if (type != EntityType::Empty) {
-                    addEntity(type, x, y);
+                    auto entityPtr = addEntity(type, x, y);
+                    if (entityPtr) {
+                        if (type == EntityType::Coin) {
+                            totalCoins++;
+                        } else if (type == EntityType::Fruit) {
+                            totalFruits++;
+                        } else if (type == EntityType::Pacman) {
+                            if (auto pacman = dynamic_cast<Pacman*>(entityPtr.get())) {
+                                pacman->setLives(3); // Set initial lives for Pacman
+                            }
+                        }
+                    }
                 }
             }
         }
 
         // Add observer for keeping track of the score
-        eventSubject.attach(&scoreObserver);
-    }
-
-    int World::getScore() const {
-        return scoreObserver.getCurrentScore();
+        scoreObserver = std::make_shared<Score>();
+        eventSubject.attach(scoreObserver);
+        scoreObserver->setTotalCoins(totalCoins);
+        scoreObserver->setTotalFruits(totalFruits);
     }
 
     World::~World() {
         // Unique pointers in entities vector will automatically deallocate memory
     }
 
-    void World::addEntity(EntityType type, int x, int y) {
+    void World::update(double deltaTime) {
+        std::vector<Entity*> entitiesToRemove;
+
+        // Update logic for all entities
+        for (auto& entity : entities) {
+            switch (entity->getType()) {
+                case EntityType::Pacman: {
+                    auto pacman = static_cast<Pacman*>(entity.get());
+                    updatePacmanPosition(*pacman, deltaTime);
+                    checkPacmanCollisions(*pacman, entitiesToRemove);
+                    break;
+                }
+                case EntityType::Ghost: {
+                    auto ghost = static_cast<Ghost*>(entity.get());
+                    ghost->update(deltaTime);
+                    if (ghost->state == Ghost::State::Chasing) {
+                        if (ghost->useSmartMovement) {
+                            updateGhostPositionSmart(*ghost, deltaTime, currentLevel);
+                        } else {
+                            updateGhostPositionSimple(*ghost, deltaTime);
+                        }
+                    }
+                    break;
+                }
+                    // Handle other entity types if necessary
+                default:
+                    break;
+            }
+        }
+
+        // Remove entities marked for deletion
+        for (auto entityToRemove : entitiesToRemove) {
+            // Notify observers before removing the entity
+            eventSubject.notify(entityToRemove->getType());
+            removeEntity(entityToRemove);
+        }
+
+        updateScore(deltaTime);
+
+        if (allCoinsAndFruitsEaten()) {
+            incrementLevel();
+            resetEntities();
+            respawnCoinsAndFruits();
+        }
+    }
+
+    std::shared_ptr<Entity> World::addEntity(EntityType type, int x, int y) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
-            std::unique_ptr<Entity> entity;
+            std::shared_ptr<Entity> entity;
             switch (type) {
                 case EntityType::Coin:
                     entity = entityFactory->createCoin();
@@ -81,28 +140,29 @@ namespace Logic {
                     entity = entityFactory->createPacman();
                     break;
                 default:
-                    return; // Do nothing for EntityType::Empty
+                    return nullptr; // Do nothing for EntityType::Empty
             }
 
-            // Set the position directly without normalization
+            // Set the position
             entity->position.x = static_cast<double>(x);
             entity->position.y = static_cast<double>(y);
 
-            entities.push_back(std::move(entity));
+            entities.push_back(entity);
             map[y][x] = type;
+            return entity;
         }
+        return nullptr;
     }
 
     void World::removeEntity(Entity* entityToRemove) {
-        // Find and remove the entity from the vector
         auto it = std::remove_if(entities.begin(), entities.end(),
-                                 [entityToRemove](const std::unique_ptr<Entity>& entity) {
+                                 [entityToRemove](const std::shared_ptr<Entity>& entity) {
                                      return entity.get() == entityToRemove;
                                  });
         entities.erase(it, entities.end());
     }
 
-    const std::vector<std::unique_ptr<Entity>>& World::getEntities() const {
+    const std::vector<std::shared_ptr<Entity>>& World::getEntities() const {
         return entities;
     }
 
@@ -120,41 +180,6 @@ namespace Logic {
         bounds.width = entity.getSize().first;
         bounds.height = entity.getSize().second;
         return bounds;
-    }
-
-    void World::update(double deltaTime) {
-        std::vector<Entity*> entitiesToRemove;
-
-        // Update logic for all entities
-        for (auto& entity : entities) {
-            switch (entity->getType()) {
-                case EntityType::Pacman: {
-                    auto pacman = static_cast<Pacman*>(entity.get());
-                    updatePacmanPosition(*pacman, deltaTime);
-                    checkPacmanCollisions(*pacman, entitiesToRemove);
-                    break;
-                }
-                case EntityType::Ghost: {
-                    auto ghost = static_cast<Ghost*>(entity.get());
-                    if (ghost->useSmartMovement) {
-                        updateGhostPositionSmart(*ghost, deltaTime, 100);
-                    } else {
-                        updateGhostPositionSimple(*ghost, deltaTime);
-                    }
-                    break;
-                }
-                    // Handle other entity types if necessary
-                default:
-                    break;
-            }
-        }
-
-        // Remove entities marked for deletion
-        for (auto entityToRemove : entitiesToRemove) {
-            // Notify observers before removing the entity
-            eventSubject.notify(entityToRemove->getType());
-            removeEntity(entityToRemove);
-        }
     }
 
     void World::updatePacmanPosition(Pacman& pacman, double deltaTime) {
@@ -203,30 +228,55 @@ namespace Logic {
         Rectangle pacmanBounds = getEntityBounds(pacman);
 
         for (auto& entity : entities) {
-            if (entity->getType() == EntityType::Coin) {
-                Rectangle coinBounds = getEntityBounds(*entity);
-                if (checkCollision(pacmanBounds, coinBounds)) {
-                    // Collision with a coin detected
-                    entitiesToRemove.push_back(entity.get());
-                }
-            } else if (entity->getType() == EntityType::Fruit) {
-                Rectangle fruitBounds = getEntityBounds(*entity);
-                if (checkCollision(pacmanBounds, fruitBounds)) {
-                    // Collision with a fruit detected
-                    entitiesToRemove.push_back(entity.get());
+            Rectangle entityBounds = getEntityBounds(*entity);
+            if (checkCollision(pacmanBounds, entityBounds)) {
+                switch (entity->getType()) {
+                    case EntityType::Coin:
+                        entitiesToRemove.push_back(entity.get());
+                        //std::cout << "Coin eaten. Total eaten: " << scoreObserver->getEatenCoins() + 1 << "/" << totalCoins << std::endl;
+                        //eventSubject.notify(EntityType::Coin);
+                        break;
+
+                    case EntityType::Fruit:
+                        entitiesToRemove.push_back(entity.get());
+                        //std::cout << "Fruit eaten. Total eaten: " << scoreObserver->getEatenFruits() + 1 << "/" << totalFruits << std::endl;
+                        //eventSubject.notify(EntityType::Fruit);
+
+                        // Make all ghosts vulnerable
+                        for (auto& ghostEntity : entities) {
+                            if (auto ghost = dynamic_cast<Ghost*>(ghostEntity.get())) {
+                                ghost->makeVulnerable(10);  // 10 seconds of vulnerability
+                            }
+                        }
+                        break;
+                    /*
+                    case EntityType::Ghost:
+                        if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
+                            if (ghost->isVulnerable) {
+                                ghost->position = {10, 5};  // Respawn in center
+                                ghost->isVulnerable = false;
+                            } else {
+                                pacman.setLives(pacman.getLives() - 1);
+                            }
+                        }
+                        break;
+                        */
+
+                    default:
+                        break;
                 }
             }
         }
     }
 
     void World::updateGhostPositionSimple(Ghost& ghost, double deltaTime) {
-        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
+        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnDelay) {
             ghost.state = Ghost::State::Chasing;
         }
 
         if (ghost.state == Ghost::State::Chasing) {
             auto newPosition = ghost.position;
-            double moveDistance = ghost.speed * deltaTime * 5.0;
+            double moveDistance = ghost.getSpeed() * deltaTime * 5.0;
 
             switch (ghost.lockedDirection) {
                 case Entity::Direction::Up:    newPosition.y -= moveDistance; break;
@@ -270,7 +320,7 @@ namespace Logic {
             return viableDirections[utils::Random::getInstance().getInt(0, viableDirections.size() - 1)];
         }
 
-        int minDistance = std::numeric_limits<int>::max();
+        int bestDistance = ghost.isVulnerable ? 0 : std::numeric_limits<int>::max();
         std::vector<Entity::Direction> bestDirections;
 
         for (const auto& dir : viableDirections) {
@@ -283,11 +333,11 @@ namespace Logic {
             }
 
             int distance = getManhattanDistance(newPos, pacman.position);
-            if (distance < minDistance) {
-                minDistance = distance;
+            if ((ghost.isVulnerable && distance > bestDistance) || (!ghost.isVulnerable && distance < bestDistance)) {
+                bestDistance = distance;
                 bestDirections.clear();
                 bestDirections.push_back(dir);
-            } else if (distance == minDistance) {
+            } else if (distance == bestDistance) {
                 bestDirections.push_back(dir);
             }
         }
@@ -342,17 +392,17 @@ namespace Logic {
         return nullptr; // Return nullptr if no Pacman found
     }
 
-    std::vector<Entity::Position> World::findPath(const Ghost& ghost, const Pacman& pacman) {
+    std::vector<Entity::Position> World::findPath(const Entity::Position& start, const Entity::Position& goal) {
         std::vector<std::vector<bool>> visited(height, std::vector<bool>(width, false));
         std::vector<std::vector<Node>> nodes(height, std::vector<Node>(width, Node(0, 0)));
 
         auto compare = [](const Node* a, const Node* b) { return a->f > b->f; };
         std::priority_queue<Node*, std::vector<Node*>, decltype(compare)> openList(compare);
 
-        int startX = static_cast<int>(std::round(ghost.position.x));
-        int startY = static_cast<int>(std::round(ghost.position.y));
-        int goalX = static_cast<int>(std::round(pacman.position.x));
-        int goalY = static_cast<int>(std::round(pacman.position.y));
+        int startX = static_cast<int>(std::round(start.x));
+        int startY = static_cast<int>(std::round(start.y));
+        int goalX = static_cast<int>(std::round(goal.x));
+        int goalY = static_cast<int>(std::round(goal.y));
 
         nodes[startY][startX] = Node(startX, startY);
         openList.push(&nodes[startY][startX]);
@@ -414,33 +464,31 @@ namespace Logic {
     }
 
     void World::updateGhostPositionSmart(Ghost& ghost, double deltaTime, int level) {
-        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnTimer) {
+        if (ghost.state == Ghost::State::Waiting && elapsedTime >= ghost.spawnDelay) {
             ghost.state = Ghost::State::Chasing;
         }
 
         if (ghost.state == Ghost::State::Chasing) {
             Pacman* pacman = getPacman();
             if (pacman) {
-                // Calculate difficulty factor using a sigmoid function
                 double difficulty = 1.0 / (1.0 + std::exp(-0.1 * (level - 50)));
 
-                std::vector<Entity::Position> path = findPath(ghost, *pacman);
-                if (!path.empty() && path.size() > 1) {
-                    Entity::Position nextPos = path[1]; // Next position after current
+                std::vector<Entity::Position> path = ghost.isVulnerable ?
+                                                     findFurthestPath(ghost.position, pacman->position) :
+                                                     findPath(ghost.position, pacman->position);
 
-                    // Calculate direction vector
+                if (!path.empty() && path.size() > 1) {
+                    Entity::Position nextPos = path[1];
+
                     double dx = nextPos.x - ghost.position.x;
                     double dy = nextPos.y - ghost.position.y;
                     double length = std::sqrt(dx * dx + dy * dy);
 
                     if (length > 0) {
-                        // Normalize direction vector
                         dx /= length;
                         dy /= length;
 
-                        // Adjust direction based on difficulty
                         if (utils::Random::getInstance().getDouble(0, 1) > difficulty) {
-                            // Randomly adjust direction for lower difficulties
                             dx += utils::Random::getInstance().getDouble(-0.5, 0.5) * (1 - difficulty);
                             dy += utils::Random::getInstance().getDouble(-0.5, 0.5) * (1 - difficulty);
                             length = std::sqrt(dx * dx + dy * dy);
@@ -448,12 +496,10 @@ namespace Logic {
                             dy /= length;
                         }
 
-                        // Move ghost
-                        double moveDistance = ghost.speed * deltaTime * 5.0 * (0.5 + 0.5 * difficulty);
+                        double moveDistance = ghost.getSpeed() * deltaTime * 5.0 * (0.5 + 0.5 * difficulty);
                         ghost.position.x += dx * moveDistance;
                         ghost.position.y += dy * moveDistance;
 
-                        // Update locked direction based on primary movement axis
                         if (std::abs(dx) > std::abs(dy)) {
                             ghost.lockedDirection = (dx > 0) ? Entity::Direction::Right : Entity::Direction::Left;
                         } else {
@@ -462,6 +508,141 @@ namespace Logic {
                     }
                 }
             }
+        }
+    }
+
+    std::vector<Entity::Position> World::findFurthestPath(const Entity::Position& ghost, const Entity::Position& pacman) {
+        std::vector<Entity::Position> furthestPath;
+        int maxDistance = 0;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (map[y][x] != EntityType::Wall) {
+                    Entity::Position target = {static_cast<double>(x), static_cast<double>(y)};
+                    int distanceToPacman = getManhattanDistance(target, pacman);
+
+                    if (distanceToPacman > maxDistance) {
+                        std::vector<Entity::Position> path = findPath(ghost, target);
+                        if (!path.empty()) {
+                            maxDistance = distanceToPacman;
+                            furthestPath = path;
+                        }
+                    }
+                }
+            }
+        }
+
+        return furthestPath;
+    }
+
+    void World::incrementLevel() {
+        currentLevel++;
+        increaseGhostSpeed();
+        decreaseFearModeDuration();
+    }
+
+    void World::resetLevel() {
+        currentLevel = 1;
+        // Reset difficulty here
+        resetGhostSpeed();
+        resetFearModeDuration();
+    }
+
+    bool World::allCoinsAndFruitsEaten() const {
+        return scoreObserver->getEatenCoins() == totalCoins && scoreObserver->getEatenFruits() == totalFruits;
+    }
+
+    void World::increaseGhostSpeed() {
+        ghostSpeedMultiplier *= 5; // Increase speed by 10% each level
+    }
+
+    void World::decreaseFearModeDuration() {
+        fearModeDuration *= 0.9; // Decrease duration by 10% each level
+    }
+
+    void World::resetGhostSpeed() {
+        ghostSpeedMultiplier = 1.0;
+    }
+
+    void World::resetFearModeDuration() {
+        fearModeDuration = 10.0;
+    }
+
+    void World::prepareNextLevel() {
+        resetEntities();
+        respawnCoinsAndFruits();
+
+        // Reset ghost vulnerability
+        for (auto& entity : entities) {
+            if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
+                ghost->isVulnerable = false;
+                ghost->vulnerabilityTimer = 0;
+            }
+        }
+    }
+
+    void World::resetEntities() {
+        // Remove all existing ghosts
+        entities.erase(
+                std::remove_if(entities.begin(), entities.end(),
+                               [](const std::shared_ptr<Entity>& entity) {
+                                   return dynamic_cast<Ghost*>(entity.get()) != nullptr;
+                               }
+                ),
+                entities.end()
+        );
+
+        // Reset Pacman to starting position
+        for (auto& entity : entities) {
+            if (auto pacman = dynamic_cast<Pacman*>(entity.get())) {
+                pacman->position = {6, 1};
+                break;
+            }
+        }
+
+        // Create new ghosts
+        auto ghost1 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 9, 5));
+        if (ghost1) ghost1->spawnDelay = 0.0;  // First ghost starts immediately
+
+        auto ghost2 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 10, 5));
+        if (ghost2) ghost2->spawnDelay = 0.0;  // Second ghost also starts immediately
+
+        auto ghost3 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 11, 5));
+        if (ghost3) ghost3->spawnDelay = 5.0;  // Third ghost starts after 5 seconds
+
+        auto ghost4 = std::dynamic_pointer_cast<Ghost>(addEntity(EntityType::Ghost, 12, 5));
+        if (ghost4) ghost4->spawnDelay = 10.0;  // Fourth ghost starts after 10 seconds
+    }
+
+    void World::respawnCoinsAndFruits() {
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (map[y][x] == EntityType::Coin) {
+                    addEntity(EntityType::Coin, x, y);
+                }
+                else if (map[y][x] == EntityType::Fruit) {
+                    addEntity(EntityType::Fruit, x, y);
+                }
+            }
+        }
+        scoreObserver->resetEatenCoinsAndFruits();
+    }
+
+    int World::getScore() const {
+        return scoreObserver->getCurrentScore();
+    }
+
+    int World::getEatenCoins() const {
+        return scoreObserver->getEatenCoins();
+    }
+
+    int World::getEatenFruits() const {
+        return scoreObserver->getEatenFruits();
+    }
+
+    void World::updateScore(double deltaTime) {
+        if (scoreObserver) {
+            scoreObserver->update(deltaTime);
         }
     }
 
