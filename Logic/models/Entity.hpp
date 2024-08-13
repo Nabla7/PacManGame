@@ -31,7 +31,7 @@ public:
         Down,
         Left,
         Right
-    } direction;
+    };
 
     double speed = 1;
 
@@ -85,7 +85,6 @@ class Coin : public Entity {
 public:
     void setValue(int v) { value = v; }
     int getValue() const { return value; }
-
     EntityType getType() const override { return EntityType::Coin; }
 };
 
@@ -106,7 +105,7 @@ public:
                 : state(State::Waiting),
                   spawnDelay(spawnDelay),
                   lockedDirection(Direction::Up),
-                  useSmartMovement(true),
+                  useSmartMovement(false),
                   elapsedTime(0.0)  // Track elapsed time since creation
         {}
 

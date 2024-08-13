@@ -537,7 +537,6 @@ namespace Logic {
 
     void World::incrementLevel() {
         currentLevel++;
-        // Increase difficulty here
         increaseGhostSpeed();
         decreaseFearModeDuration();
     }
@@ -554,7 +553,7 @@ namespace Logic {
     }
 
     void World::increaseGhostSpeed() {
-        ghostSpeedMultiplier *= 1.1; // Increase speed by 10% each level
+        ghostSpeedMultiplier *= 5; // Increase speed by 10% each level
     }
 
     void World::decreaseFearModeDuration() {

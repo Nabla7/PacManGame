@@ -8,11 +8,11 @@
 
 namespace Logic {
 
-class IObserver {
-public:
-    virtual ~IObserver() = default;
-    virtual void onNotify(EntityType entityType) = 0;
-};
+    class IObserver {
+    public:
+        virtual ~IObserver() = default;
+        virtual void onNotify(EntityType entityType) = 0;
+    };
 
     class Subject {
     public:
@@ -39,11 +39,9 @@ public:
         std::vector<std::weak_ptr<IObserver>> observers;
     };
 
-
-
     class Score : public IObserver {
     public:
-        Score() : totalScore(0), coinValue(10), timeSinceLastDecay(0),
+        Score() : totalScore(0), coinValue(10), initialCoinValue(10), timeSinceLastDecay(0),
                   eatenCoins(0), totalCoins(0), eatenFruits(0), totalFruits(0) {}
 
         void onNotify(EntityType entityType) override {
@@ -51,6 +49,8 @@ public:
                 case EntityType::Coin:
                     totalScore += coinValue;
                     eatenCoins++;
+                    coinValue = initialCoinValue; // Reset coin value when a coin is eaten
+                    timeSinceLastDecay = 0; // Reset decay timer
                     std::cout << "Coin collected. Score: " << totalScore << ", Coins eaten: " << eatenCoins << "/" << totalCoins << std::endl;
                     break;
                 case EntityType::Fruit:
@@ -66,7 +66,7 @@ public:
                     break;
             }
         }
-        
+
         void update(double deltaTime) {
             timeSinceLastDecay += deltaTime;
             if (timeSinceLastDecay >= 1.0) {
@@ -90,6 +90,8 @@ public:
         void resetEatenCoinsAndFruits() {
             eatenCoins = 0;
             eatenFruits = 0;
+            coinValue = initialCoinValue; // Reset coin value when starting a new level
+            timeSinceLastDecay = 0; // Reset decay timer
         }
 
         int getCurrentScore() const { return totalScore; }
@@ -101,6 +103,7 @@ public:
     private:
         int totalScore;
         int coinValue;
+        int initialCoinValue;
         double timeSinceLastDecay;
         int eatenCoins;
         int totalCoins;
