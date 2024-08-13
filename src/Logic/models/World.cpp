@@ -84,6 +84,7 @@ namespace Logic {
                     auto pacman = static_cast<Pacman*>(entity.get());
                     updatePacmanPosition(*pacman, deltaTime);
                     checkPacmanCollisions(*pacman, entitiesToRemove);
+                    pacman->updateDeathAnimation(deltaTime);
                     break;
                 }
                 case EntityType::Ghost: {
@@ -249,18 +250,19 @@ namespace Logic {
                             }
                         }
                         break;
-                    /*
+
                     case EntityType::Ghost:
                         if (auto ghost = dynamic_cast<Ghost*>(entity.get())) {
                             if (ghost->isVulnerable) {
                                 ghost->position = {10, 5};  // Respawn in center
                                 ghost->isVulnerable = false;
                             } else {
+                                pacman.startDeathAnimation();
                                 pacman.setLives(pacman.getLives() - 1);
                             }
                         }
                         break;
-                        */
+
 
                     default:
                         break;

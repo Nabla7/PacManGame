@@ -45,7 +45,7 @@ namespace Representation {
         auto& world = game.getWorld();
         world.update(deltaTime);
 
-        worldView->update();
+        worldView->update(deltaTime);
 
         std::cout << "Pacman lives: " << world.getPacman()->getLives() << std::endl;
         std::cout << "Coins left: " << (world.totalCoins - world.getEatenCoins()) << std::endl;

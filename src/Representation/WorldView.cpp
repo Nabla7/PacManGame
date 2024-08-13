@@ -1,13 +1,12 @@
-// Representation/WorldView.cpp
+// WorldView.cpp
 #include "WorldView.hpp"
 
 namespace Representation {
 
-    // Representation/WorldView.cpp
     WorldView::WorldView(sf::RenderWindow& window, Logic::World& world, Camera& camera, const std::string& textureFilePath)
             : window_(window), world_(world), camera_(camera), textureFilePath_(textureFilePath)
     {
-        update();
+        update(0.0f);
     }
 
     void WorldView::draw() {
@@ -16,11 +15,14 @@ namespace Representation {
         }
     }
 
-    // Representation/WorldView.cpp
-    void WorldView::update() {
+    void WorldView::update(float deltaTime) {
         entityViews_.clear();
         for (const auto& entity : world_.getEntities()) {
             entityViews_.emplace_back(window_, *entity, camera_, textureFilePath_);
+        }
+
+        for (auto& entityView : entityViews_) {
+            entityView.update(deltaTime);
         }
     }
 

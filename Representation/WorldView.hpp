@@ -1,4 +1,4 @@
-// Representation/WorldView.hpp
+// WorldView.hpp
 #ifndef WORLD_VIEW_HPP
 #define WORLD_VIEW_HPP
 
@@ -14,10 +14,10 @@ namespace Representation {
     public:
         WorldView(sf::RenderWindow& window, Logic::World& world, Camera& camera, const std::string& textureFilePath);
         void draw();
-        void update();
+        void update(float deltaTime);
 
         void onNotify(Logic::EntityType entityType) override {
-            update();
+            update(0.0f);
         }
 
         void attachToWorld() {

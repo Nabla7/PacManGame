@@ -77,6 +77,24 @@ public:
         std::cout << "Pacman is now moving in direction: " << Entity::DirectionToString(direction) << std::endl;
     }
 
+    bool isDying = false;
+    float deathAnimationTime = 0.0f;
+
+    void startDeathAnimation() {
+        isDying = true;
+        deathAnimationTime = 0.0f;
+    }
+
+    void updateDeathAnimation(float deltaTime) {
+        if (isDying) {
+            deathAnimationTime += deltaTime;
+            if (deathAnimationTime >= 1.0f) {  // 1 second death animation
+                isDying = false;
+                // Reset Pac-Man's position or handle game over logic
+            }
+        }
+    }
+
 };
 
 class Coin : public Entity {
