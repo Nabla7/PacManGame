@@ -25,6 +25,20 @@ namespace Representation {
         sprite_.setOrigin(sprite_.getLocalBounds().width / 2, sprite_.getLocalBounds().height / 2);
     }
 
+    sf::IntRect EntityView::getCurrentFrame() const {
+        if (auto pacman = dynamic_cast<const Logic::Pacman*>(&entity_)) {
+            if (pacman->isDying) {
+                return deathAnimationFrames_[currentFrame_ % deathAnimationFrames_.size()];
+            } else {
+                return animationFrames_.at(pacman->direction_)[currentFrame_ % animationFrames_.at(pacman->direction_).size()];
+            }
+        } else if (auto ghost = dynamic_cast<const Logic::Ghost*>(&entity_)) {
+            return animationFrames_.at(ghost->lockedDirection)[currentFrame_ % animationFrames_.at(ghost->lockedDirection).size()];
+        } else {
+            return sprite_.getTextureRect();
+        }
+    }
+
     void EntityView::setupAnimation()
     {
         const int col_spacing = 51;

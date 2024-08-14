@@ -19,6 +19,7 @@ namespace Representation {
 
         void draw();
         void update(float deltaTime);
+        sf::IntRect getCurrentFrame() const; // New method
 
     private:
         sf::RenderWindow& window_;
@@ -27,7 +28,6 @@ namespace Representation {
         sf::Texture& texture_;
         Camera& camera_;
 
-        // Animation properties
         std::map<Logic::Entity::Direction, std::vector<sf::IntRect>> animationFrames_;
         std::vector<sf::IntRect> deathAnimationFrames_;
         float frameTime_;
