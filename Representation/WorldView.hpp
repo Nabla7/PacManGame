@@ -28,7 +28,7 @@ namespace Representation {
         sf::RenderWindow& window_;
         Logic::World& world_;
         Camera& camera_;
-        std::vector<EntityView> entityViews_;
+        std::vector<std::unique_ptr<EntityView>> entityViews_;
         std::string textureFilePath_;
     };
 

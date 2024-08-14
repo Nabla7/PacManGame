@@ -19,7 +19,8 @@ namespace Representation {
 
         void draw();
         void update(float deltaTime);
-        sf::IntRect getCurrentFrame() const; // New method
+        sf::IntRect getCurrentFrame() const;
+        const Logic::Entity& getEntity() const { return entity_; }
 
     private:
         sf::RenderWindow& window_;
