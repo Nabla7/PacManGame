@@ -64,38 +64,50 @@ public:
     }
 };
 
-class Pacman : public Entity {
-    int lives; // The number of lives left
+    class Pacman : public Entity {
+        int lives; // The number of lives left
 
-public:
-    void setLives(int l) { lives = l; }
-    int getLives() const { return lives; }
-    Direction direction_;
-    EntityType getType() const override { return EntityType::Pacman; }
-    void move(Direction direction) override {
-        direction_ = direction;
-        std::cout << "Pacman is now moving in direction: " << Entity::DirectionToString(direction) << std::endl;
-    }
+    public:
+        void setLives(int l) { lives = l; }
+        int getLives() const { return lives; }
+        Direction direction_;
+        EntityType getType() const override { return EntityType::Pacman; }
+        void move(Direction direction) override {
+            direction_ = direction;
+            std::cout << "Pacman is now moving in direction: " << Entity::DirectionToString(direction) << std::endl;
+        }
 
-    bool isDying = false;
-    float deathAnimationTime = 0.0f;
+        bool isDying = false;
+        float deathAnimationTime = 0.0f;
+        bool isInvulnerable = false;
+        float invulnerabilityTime = 0.0f;
+        static constexpr float invulnerabilityDuration = 3.0f; // 3 seconds of invulnerability
 
-    void startDeathAnimation() {
-        isDying = true;
-        deathAnimationTime = 0.0f;
-    }
+        void startDeathAnimation() {
+            isDying = true;
+            deathAnimationTime = 0.0f;
+        }
 
-    void updateDeathAnimation(float deltaTime) {
-        if (isDying) {
-            deathAnimationTime += deltaTime;
-            if (deathAnimationTime >= 1.0f) {  // 1 second death animation
-                isDying = false;
-                // Reset Pac-Man's position or handle game over logic
+        void updateDeathAnimation(float deltaTime) {
+            if (isDying) {
+                deathAnimationTime += deltaTime;
+                if (deathAnimationTime >= 1.0f) {  // 1 second death animation
+                    isDying = false;
+                    isInvulnerable = true;
+                    invulnerabilityTime = 0.0f;
+                }
             }
         }
-    }
 
-};
+        void updateInvulnerability(float deltaTime) {
+            if (isInvulnerable) {
+                invulnerabilityTime += deltaTime;
+                if (invulnerabilityTime >= invulnerabilityDuration) {
+                    isInvulnerable = false;
+                }
+            }
+        }
+    };
 
 class Coin : public Entity {
     int value; // The value of the coin when collected
