@@ -11,7 +11,7 @@
 
 int main() {
     std::cout << "\n========== Animation Sprite Tests ==========\n";
-    Representation::testAnimationSprites();
+    Representation::testAnimationSprites(true);
     std::cout << "\n========== Stopwatch Tests ==========\n";
     testStopwatch();
     std::cout << "\n========== Random Tests ==========\n";

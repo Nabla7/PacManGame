@@ -1,13 +1,13 @@
-// tests/representation_tests/AnimationSpriteTest.cpp
 #include "EntityView.hpp"
 #include "factories/ConcreteEntityFactory.hpp"
+#include "utils/Stopwatch.hpp"
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <iostream>
 
 namespace Representation {
 
-    void testAnimationSprites() {
+    void testAnimationSprites(bool useStopwatch = false) {
         // Initialize the window
         sf::RenderWindow window(sf::VideoMode(800, 600), "Animation Sprite Test");
 
@@ -32,11 +32,16 @@ namespace Representation {
         EntityView pacmanView(window, *pacman, camera, textureFilePath);
         EntityView ghostView(window, *ghost, camera, textureFilePath);
 
-        sf::Clock clock;
+        sf::Clock sfClock;
+        utils::Stopwatch& stopwatch = utils::Stopwatch::getInstance();
         float totalTime = 0.0f;
         float lastDirectionChangeTime = 0.0f;
 
-        // Loop until 5 seconds have passed
+        if (useStopwatch) {
+            stopwatch.start();
+        }
+
+        // Loop until 30 seconds have passed
         while (totalTime < 30.0f) {
             sf::Event event;
             while (window.pollEvent(event)) {
@@ -44,7 +49,13 @@ namespace Representation {
                     window.close();
             }
 
-            float deltaTime = clock.restart().asSeconds();
+            float deltaTime;
+            if (useStopwatch) {
+                deltaTime = stopwatch.getElapsedTime();
+                stopwatch.start(); // Restart the stopwatch
+            } else {
+                deltaTime = sfClock.restart().asSeconds();
+            }
             totalTime += deltaTime;
 
             // Update animations
