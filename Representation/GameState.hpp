@@ -55,11 +55,15 @@ public:
 
 class GameOverState : public State {
 public:
-    GameOverState() : shouldTransitionToMenu(false) {}
+    GameOverState(int finalScore, int finalLevel);
     void handleInput(Game& game, Logic::GameAction action) override;
     void update(Game& game, double deltaTime) override;
     void render(Game& game) override;
 private:
+    int finalScore_;
+    int finalLevel_;
+    bool nameEntered_;
+    std::string currentName_;
     bool shouldTransitionToMenu;
 };
 

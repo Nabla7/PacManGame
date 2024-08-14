@@ -16,7 +16,8 @@ Game::Game()
           inputHandler_(window_),
           world_(std::make_shared<Logic::PacmanGameEntityFactory>()),
           camera_(window_.getSize().x, window_.getSize().y),
-          view_(sf::FloatRect(-150.f, -70.f, 1000.f, 550.f))
+          view_(sf::FloatRect(-150.f, -70.f, 1000.f, 550.f)),
+          highScoreManager_("highscores.txt")
       {
 
         // Initialize world with the factory

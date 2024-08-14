@@ -7,8 +7,11 @@
 #include "representation_tests/SpriteTest.cpp"
 #include "logic_tests/models_tests/WorldAddEntityTest.cpp"
 #include "representation_tests/CameraProjectPositionTest.cpp"
+#include "representation_tests/AnimationSpriteTest.cpp"
 
 int main() {
+    std::cout << "\n========== Animation Sprite Tests ==========\n";
+    Representation::testAnimationSprites(true);
     std::cout << "\n========== Stopwatch Tests ==========\n";
     testStopwatch();
     std::cout << "\n========== Random Tests ==========\n";
