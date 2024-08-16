@@ -71,7 +71,8 @@ namespace Representation {
             levelDisplayTimer = 2.0f;
         }
 
-        if (world.getPacman()->getLives() <= 0) {
+        auto pacman = world.getPacman();
+        if (pacman->getLives() <= 0 && !pacman->isDying) {
             int finalScore = world.getScore();
             int finalLevel = world.getCurrentLevel();
             game.getStateManager().pushState(std::make_unique<GameOverState>(finalScore, finalLevel));

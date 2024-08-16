@@ -82,9 +82,12 @@ namespace Logic {
             switch (entity->getType()) {
                 case EntityType::Pacman: {
                     auto pacman = static_cast<Pacman*>(entity.get());
-                    updatePacmanPosition(*pacman, deltaTime);
-                    checkPacmanCollisions(*pacman, entitiesToRemove);
+                    if (!pacman->isDying) {
+                        updatePacmanPosition(*pacman, deltaTime);
+                        checkPacmanCollisions(*pacman, entitiesToRemove);
+                    }
                     pacman->updateDeathAnimation(deltaTime);
+                    pacman->updateInvulnerability(deltaTime);
                     break;
                 }
                 case EntityType::Ghost: {
@@ -226,6 +229,10 @@ namespace Logic {
     }
 
     void World::checkPacmanCollisions(Pacman& pacman, std::vector<Entity*>& entitiesToRemove) {
+        if (pacman.isDying || pacman.isInvulnerable) {
+            return; // Skip collision detection if Pac-Man is dying or invulnerable
+        }
+
         Rectangle pacmanBounds = getEntityBounds(pacman);
 
         for (auto& entity : entities) {
@@ -254,10 +261,10 @@ namespace Logic {
                             } else {
                                 pacman.startDeathAnimation();
                                 pacman.setLives(pacman.getLives() - 1);
+                                return; // Exit the function to prevent multiple life loss
                             }
                         }
                         break;
-
 
                     default:
                         break;
