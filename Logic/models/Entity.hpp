@@ -135,7 +135,7 @@ public:
                 : state(State::Waiting),
                   spawnDelay(spawnDelay),
                   lockedDirection(Direction::Up),
-                  useSmartMovement(false),
+                  useSmartMovement(true),
                   elapsedTime(0.0)  // Track elapsed time since creation
         {}
 
